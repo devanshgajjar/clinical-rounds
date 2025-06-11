@@ -329,8 +329,28 @@ const AppContent: React.FC = () => {
     }
 
     if (gameState.showSummary) {
-      // For now, we'll use a simple results component
-      // TODO: Implement proper ResultsScreen integration
+      // Save results to localStorage for case selection display
+      if (gameState.xpCalculation && gameState.currentCase) {
+        const caseId = gameState.currentCase.id;
+        const averageScore = Math.round(
+          gameState.currentStepResults.reduce((sum, step) => sum + step.score, 0) / gameState.currentStepResults.length
+        );
+        
+        const results = {
+          caseId,
+          averageScore,
+          performance: averageScore >= 90 ? 'excellent' : averageScore >= 80 ? 'good' : averageScore >= 60 ? 'poor' : 'failed',
+          xpEarned: gameState.xpCalculation.finalXP,
+          completedAt: new Date().toISOString(),
+          stepResults: gameState.currentStepResults
+        };
+        
+        localStorage.setItem(`case_${caseId}_results`, JSON.stringify(results));
+        localStorage.setItem(`case_${caseId}_completed`, 'true');
+        
+        console.log('Saved case results to localStorage:', results);
+      }
+
       return (
         <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4">

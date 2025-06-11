@@ -42,7 +42,7 @@ const CaseSelection: React.FC = () => {
     if (savedResults) {
       try {
         const results = JSON.parse(savedResults);
-        return results.totalXPEarned || results.finalXP || 0;
+        return results.xpEarned || results.finalXP || results.totalXPEarned || 0;
       } catch (e) {
         return 0;
       }
