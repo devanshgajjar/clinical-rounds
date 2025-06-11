@@ -36,6 +36,20 @@ const CaseSelection: React.FC = () => {
     return 0;
   };
 
+  const getEarnedXP = (caseId: string) => {
+    // Get the earned XP from localStorage
+    const savedResults = localStorage.getItem(`case_${caseId}_results`);
+    if (savedResults) {
+      try {
+        const results = JSON.parse(savedResults);
+        return results.totalXPEarned || results.finalXP || 0;
+      } catch (e) {
+        return 0;
+      }
+    }
+    return 0;
+  };
+
   const isCaseCompleted = (caseId: string) => {
     return gameState.progress.completedCases.includes(caseId) || 
            localStorage.getItem(`case_${caseId}_completed`) === 'true';
@@ -139,7 +153,10 @@ const CaseSelection: React.FC = () => {
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className="text-sm font-medium text-gray-900">
-                              +{caseData.scoring.baseXP}XP
+                              {isCompleted 
+                                ? `+${getEarnedXP(caseData.id)}XP Earned`
+                                : `+${caseData.scoring.baseXP}XP`
+                              }
                             </span>
                             {statusIcon && (
                               <span className="text-lg">{statusIcon}</span>
