@@ -1,0 +1,244 @@
+/* Import HistoryTaking styles for consistency */
+@import './HistoryTaking.css';
+
+.treatment-container {
+  background: #083B4C;
+  color: white;
+  min-height: 100vh;
+  padding: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Page Title */
+.page-title-section {
+  margin-bottom: 32px;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: white;
+  margin: 0 0 8px 0;
+}
+
+.page-subtitle {
+  font-size: 16px;
+  color: #9CA3AF;
+  margin: 0;
+}
+
+/* Search Section */
+.search-section {
+  margin-bottom: 24px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: #1E3A4A;
+  border-radius: 12px;
+  padding: 12px 16px;
+  border: 2px solid #374151;
+  transition: border-color 0.2s ease;
+}
+
+.search-bar:focus-within {
+  border-color: #3B82F6;
+}
+
+.search-icon {
+  margin-right: 12px;
+  font-size: 16px;
+  color: #9CA3AF;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: #9CA3AF;
+}
+
+/* Treatment Categories */
+.categories-container {
+  margin-bottom: 120px;
+}
+
+.category-section {
+  background: #1E3A4A;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid #374151;
+}
+
+.category-header {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.category-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  text-align: left;
+}
+
+.chevron {
+  color: #9CA3AF;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.chevron.expanded {
+  transform: rotate(180deg);
+}
+
+.category-content {
+  padding: 0 20px 20px 20px;
+}
+
+/* Treatment Options */
+.treatment-option {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: #0F2937;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.treatment-option:hover {
+  background: #1A3441;
+  transform: translateY(-1px);
+}
+
+.treatment-option.selected {
+  background: #1E40AF;
+  border-color: #3B82F6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.checkbox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #6B7280;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.checkbox.checked {
+  background: #3B82F6;
+  border-color: #3B82F6;
+}
+
+.treatment-option.selected .checkbox.checked {
+  background: #F8FAFC;
+  border-color: #F8FAFC;
+}
+
+.checkmark {
+  color: #1E40AF;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.treatment-option.selected .checkmark {
+  color: #1E40AF;
+}
+
+.treatment-info {
+  flex: 1;
+}
+
+.treatment-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  line-height: 1.4;
+}
+
+/* Check Results Button */
+.check-results-button-section {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: calc(100% - 40px);
+  max-width: 400px;
+}
+
+.check-results-button {
+  width: 100%;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.check-results-button.enabled {
+  background: #60C9F8;
+  color: #083B4C;
+}
+
+.check-results-button.enabled:hover {
+  background: #38BDF8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(96, 201, 248, 0.4);
+}
+
+.check-results-button.disabled {
+  background: #374151;
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .treatment-container {
+    padding: 16px;
+  }
+  
+  .page-title {
+    font-size: 28px;
+  }
+  
+  .check-results-button-section {
+    left: 20px;
+    right: 20px;
+    transform: none;
+    width: auto;
+    max-width: none;
+  }
+} 
