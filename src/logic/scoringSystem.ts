@@ -72,16 +72,23 @@ export class ScoringSystem {
         const totalRelevant = correctAnswers.length;
         const minRequired = caseData.steps[StepType.HISTORY_TAKING].minimumRequired;
         
-        // Base score: percentage of relevant questions asked
-        const relevantScore = (relevantSelected / totalRelevant) * 100;
-        
         // Fail if minimum required questions not met
         if (relevantSelected < minRequired) return 0;
         
-        // Small penalty for unnecessary questions (encouraging efficiency but not overly punishing thorough history)
-        const efficiencyPenalty = irrelevantSelected > 3 ? (irrelevantSelected - 3) * 5 : 0;
+        // Base score: percentage of relevant questions asked (max 100%)
+        const relevantScore = (relevantSelected / totalRelevant) * 100;
         
-        return Math.max(0, Math.min(100, relevantScore - efficiencyPenalty));
+        // Strong penalty for irrelevant questions (realistic clinical efficiency)
+        // Each irrelevant question costs 15 points to discourage shotgun approach
+        const irrelevantPenalty = irrelevantSelected * 15;
+        
+        // Additional penalty for excessive selections (selecting ALL options)
+        const totalSelected = selectedAnswers.length;
+        const excessivePenalty = totalSelected > (totalRelevant + 2) ? (totalSelected - (totalRelevant + 2)) * 10 : 0;
+        
+        const historyScore = relevantScore - irrelevantPenalty - excessivePenalty;
+        
+        return Math.max(0, Math.min(100, historyScore));
 
       case StepType.ORDERING_TESTS:
         const testStepData = caseData.steps[StepType.ORDERING_TESTS];
@@ -123,11 +130,11 @@ export class ScoringSystem {
         const totalCost = selectedTestsData.reduce((sum: number, test: any) => sum + (test?.cost || 0), 0);
         const costPenalty = totalCost > 1000 ? Math.min(15, (totalCost - 1000) / 100) : 0;
         
-        // Penalty for excessive unnecessary tests (clinical efficiency)
+        // Strong penalty for excessive unnecessary tests (clinical efficiency and cost)
         const unnecessaryTests = selectedAnswers.filter(id => 
           !correctAnswers.includes(id) && !testStepData.tests.find((t: any) => t.id === id)?.contraindicated
         ).length;
-        const testEfficiencyPenalty = unnecessaryTests > 2 ? (unnecessaryTests - 2) * 3 : 0;
+        const testEfficiencyPenalty = unnecessaryTests * 12; // 12 points per unnecessary test
         
         const finalScore = Math.max(0, baseScore - costPenalty - testEfficiencyPenalty);
         return Math.round(Math.min(100, finalScore));
@@ -136,7 +143,8 @@ export class ScoringSystem {
         const diagnosisStepData = caseData.steps[StepType.DIAGNOSIS];
         
         if (diagnosisStepData.type === 'multiple-choice') {
-          // For single diagnosis cases, it's all or nothing
+          // For single diagnosis cases, penalize multiple selections
+          if (selectedAnswers.length > 1) return 0; // Fail for selecting multiple when only one should be chosen
           return selectedAnswers[0] === correctAnswers[0] ? 100 : 0;
         } else {
           // For multiple diagnosis cases
@@ -147,9 +155,14 @@ export class ScoringSystem {
             !correctAnswers.includes(id)
           ).length;
           
-          const diagnosisScore = (correctDiagnoses / correctAnswers.length) * 100;
-          const incorrectPenalty = incorrectDiagnoses * 30; // Heavy penalty for wrong diagnoses
-          return Math.max(0, Math.min(100, diagnosisScore - incorrectPenalty));
+          // Must get ALL correct diagnoses for full points, heavy penalty for wrong ones
+          if (correctDiagnoses === correctAnswers.length && incorrectDiagnoses === 0) {
+            return 100;
+          } else if (correctDiagnoses > 0 && incorrectDiagnoses === 0) {
+            return (correctDiagnoses / correctAnswers.length) * 80; // Max 80% for partial correct
+          } else {
+            return Math.max(0, (correctDiagnoses / correctAnswers.length) * 60 - (incorrectDiagnoses * 40));
+          }
         }
 
       case StepType.TREATMENT:
