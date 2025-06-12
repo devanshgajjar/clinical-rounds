@@ -27,8 +27,7 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
     getCurrentCase,
     clearXPGlow,
     dispatch,
-    gameState,
-    navigateToScreen
+    gameState
   } = useGame();
   const [caseData, setCaseData] = useState<CaseData | null>(null);
   const [currentStep, setCurrentStep] = useState<StepType>(StepType.HISTORY_TAKING);
@@ -448,15 +447,18 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
               onClick={() => {
                 playSound.pageTransition();
                 
-                // Clear URL parameter if it exists
+                // Clear URL parameter and force navigation to home
                 const url = new URL(window.location.href);
                 if (url.searchParams.has('case')) {
                   url.searchParams.delete('case');
                   window.history.replaceState({}, '', url.toString());
+                  
+                  // Force page reload to reset all state
+                  window.location.reload();
+                } else {
+                  // Use proper navigation to case selection
+                  dispatch({ type: 'BACK_TO_CASE_SELECTION' });
                 }
-                
-                // Use proper navigation to case selection
-                dispatch({ type: 'BACK_TO_CASE_SELECTION' });
               }}
               onMouseEnter={() => playSound.buttonHover()}
               className="text-gray-600 hover:text-gray-900 text-2xl"
