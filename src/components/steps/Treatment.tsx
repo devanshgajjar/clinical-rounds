@@ -6,6 +6,7 @@ import {
   searchTreatments,
   MedicalTreatment
 } from '../../data/medicalOptions';
+import { playSound } from '../../utils/soundManager';
 
 interface TreatmentProps {
   caseData: CaseData;
@@ -46,16 +47,21 @@ const Treatment: React.FC<TreatmentProps> = ({
   }, [filteredTreatments]);
 
   const handleTreatmentToggle = (treatmentId: string) => {
-    setSelectedTreatments(prev => 
-      prev.includes(treatmentId) 
-        ? prev.filter(id => id !== treatmentId)
-        : [...prev, treatmentId]
-    );
+    setSelectedTreatments(prev => {
+      if (prev.includes(treatmentId)) {
+        playSound.selectionRemoved();
+        return prev.filter(id => id !== treatmentId);
+      } else {
+        playSound.selectionMade();
+        return [...prev, treatmentId];
+      }
+    });
   };
 
   const handleSubmit = async () => {
     if (selectedTreatments.length > 0 && !isSubmitting) {
       setIsSubmitting(true);
+      playSound.stepComplete();
       try {
         onSubmit(selectedTreatments);
         setTimeout(() => setIsSubmitting(false), 2000);
@@ -109,7 +115,12 @@ const Treatment: React.FC<TreatmentProps> = ({
               type="text"
               placeholder="Search treatments (e.g., antibiotics, surgery, medication)..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (e.target.value && Math.random() < 0.3) {
+                  playSound.searchType();
+                }
+              }}
               className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               style={{ paddingLeft: '3.5rem' }}
             />

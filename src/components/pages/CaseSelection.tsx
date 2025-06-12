@@ -1,11 +1,13 @@
 import React from 'react';
 import { useGame } from '../../context/GameContext';
 import { casesData } from '../../data/cases';
+import { playSound } from '../../utils/soundManager';
 
 const CaseSelection: React.FC = () => {
   const { gameState } = useGame();
 
   const handleCaseSelect = (caseId: string) => {
+    playSound.caseStart();
     // For now, redirect to GamePlay with the case
     window.location.href = `/?case=${caseId}`;
   };
@@ -114,6 +116,7 @@ const CaseSelection: React.FC = () => {
                       <button
                         key={caseData.id}
                         onClick={() => handleCaseSelect(caseData.id)}
+                        onMouseEnter={() => playSound.buttonHover()}
                         className={`
                           text-left p-6 border rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors
                           ${isCompleted ? 'border-green-200 bg-green-50' : 

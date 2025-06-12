@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGame } from '../../context/GameContext';
 import { StepType } from '../../types/game';
+import { playSound } from '../../utils/soundManager';
 
 const StepSelection: React.FC = () => {
   const { gameState, dispatch } = useGame();
@@ -28,6 +29,9 @@ const StepSelection: React.FC = () => {
       event?.preventDefault();
       event?.stopPropagation();
       
+      // Play selection sound
+      playSound.buttonClick();
+      
       // Dispatch the action
       dispatch({ type: 'START_GAMEPLAY', payload: { stepType } });
     } catch (error) {
@@ -36,6 +40,7 @@ const StepSelection: React.FC = () => {
   };
 
   const handleBack = () => {
+    playSound.pageTransition();
     dispatch({ type: 'BACK_TO_CASE_SELECTION' });
   };
 
@@ -93,6 +98,7 @@ const StepSelection: React.FC = () => {
               type="button"
               onClick={(e) => handleStepSelect(step.type, e)}
               onMouseDown={(e) => e.preventDefault()}
+              onMouseEnter={() => playSound.buttonHover()}
               className="group flex flex-col items-center p-8 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors"
             >
               <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">

@@ -6,6 +6,7 @@ import {
   searchDiagnoses,
   MedicalDiagnosis
 } from '../../data/medicalOptions';
+import { playSound } from '../../utils/soundManager';
 
 interface DiagnosisProps {
   caseData: CaseData;
@@ -47,19 +48,25 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
 
   const handleDiagnosisToggle = (diagnosisId: string) => {
     if (diagnosisData.type === 'multiple-choice') {
+      playSound.selectionMade();
       setSelectedDiagnoses([diagnosisId]);
     } else {
-      setSelectedDiagnoses(prev => 
-        prev.includes(diagnosisId) 
-          ? prev.filter(id => id !== diagnosisId)
-          : [...prev, diagnosisId]
-      );
+      setSelectedDiagnoses(prev => {
+        if (prev.includes(diagnosisId)) {
+          playSound.selectionRemoved();
+          return prev.filter(id => id !== diagnosisId);
+        } else {
+          playSound.selectionMade();
+          return [...prev, diagnosisId];
+        }
+      });
     }
   };
 
   const handleSubmit = async () => {
     if (selectedDiagnoses.length > 0 && !isSubmitting) {
       setIsSubmitting(true);
+      playSound.stepComplete();
       try {
         onSubmit(selectedDiagnoses);
         setTimeout(() => setIsSubmitting(false), 2000);
@@ -106,7 +113,12 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
               type="text"
               placeholder="Search diagnoses (e.g., pneumonia, stroke, infection)..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (e.target.value && Math.random() < 0.3) {
+                  playSound.searchType();
+                }
+              }}
               className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               style={{ paddingLeft: '3.5rem' }}
             />

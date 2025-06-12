@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CaseData } from '../../data/cases';
 import { StepType } from '../../types/game';
+import { playSound } from '../../utils/soundManager';
 
 interface HistoryTakingProps {
   caseData: CaseData;
@@ -43,8 +44,10 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
   const handleQuestionToggle = (questionId: string) => {
     setSelectedQuestions(prev => {
       if (prev.includes(questionId)) {
+        playSound.selectionRemoved();
         return prev.filter(id => id !== questionId);
       } else {
+        playSound.selectionMade();
         return [...prev, questionId];
       }
     });
@@ -53,6 +56,7 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
   const handleSubmit = async () => {
     if (selectedQuestions.length >= 3 && !isSubmitting) {
       setIsSubmitting(true);
+      playSound.stepComplete();
       try {
         console.log('HistoryTaking - Selected questions:', selectedQuestions);
         console.log('HistoryTaking - Question details:', selectedQuestions.map(id => 

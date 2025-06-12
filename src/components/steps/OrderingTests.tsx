@@ -6,6 +6,7 @@ import {
   searchTests,
   MedicalTest
 } from '../../data/medicalOptions';
+import { playSound } from '../../utils/soundManager';
 
 interface OrderingTestsProps {
   caseData: CaseData;
@@ -48,8 +49,10 @@ const OrderingTests: React.FC<OrderingTestsProps> = ({
   const handleTestToggle = (testId: string) => {
     setSelectedTests(prev => {
       if (prev.includes(testId)) {
+        playSound.selectionRemoved();
         return prev.filter(id => id !== testId);
       } else if (prev.length < (testsData?.maxAllowed || 10)) {
+        playSound.selectionMade();
         return [...prev, testId];
       }
       return prev;
@@ -59,6 +62,7 @@ const OrderingTests: React.FC<OrderingTestsProps> = ({
   const handleSubmit = async () => {
     if (selectedTests.length > 0 && !isSubmitting) {
       setIsSubmitting(true);
+      playSound.stepComplete();
       try {
         onSubmit(selectedTests);
         setTimeout(() => setIsSubmitting(false), 2000);
@@ -112,7 +116,12 @@ const OrderingTests: React.FC<OrderingTestsProps> = ({
               type="text"
               placeholder="Search tests (e.g., blood work, CT scan, culture)..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (e.target.value && Math.random() < 0.3) {
+                  playSound.searchType();
+                }
+              }}
               className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               style={{ paddingLeft: '3.5rem' }}
             />

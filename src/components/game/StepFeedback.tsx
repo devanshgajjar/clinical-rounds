@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StepType } from '../../types/game';
 import { CaseData } from '../../data/cases';
+import { playSound } from '../../utils/soundManager';
 
 interface StepFeedbackProps {
   stepType: StepType;
@@ -25,7 +26,10 @@ const StepFeedback: React.FC<StepFeedbackProps> = ({
 
   useEffect(() => {
     // Sequence the animations
-    const timer1 = setTimeout(() => setShowXP(true), 500);
+    const timer1 = setTimeout(() => {
+      setShowXP(true);
+      playSound.xpGain();
+    }, 500);
     const timer2 = setTimeout(() => setShowPatient(true), 1200);
     
     return () => {
@@ -172,7 +176,11 @@ const StepFeedback: React.FC<StepFeedbackProps> = ({
         {showPatient && (
           <div className="transform transition-all duration-500 ease-out">
             <button
-              onClick={onContinue}
+              onClick={() => {
+                playSound.buttonClick();
+                onContinue();
+              }}
+              onMouseEnter={() => playSound.buttonHover()}
               className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
             >
               Continue →

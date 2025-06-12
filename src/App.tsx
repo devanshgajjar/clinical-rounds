@@ -7,6 +7,8 @@ import HistoryXPCutscene from './components/pages/HistoryXPCutscene';
 import GamePlay from './components/game/GamePlay';
 import { useGame } from './context/GameContext';
 import { getCaseById } from './data/cases';
+import { playSound } from './utils/soundManager';
+import SoundToggle from './components/ui/SoundToggle';
 import './styles/duolingo-theme.css';
 
 // Custom Case Introduction component for our case data
@@ -19,7 +21,11 @@ const CustomCaseIntroduction: React.FC<{ caseId: string; onStart: () => void; on
         <div className="text-center">
           <h2 className="text-2xl font-medium text-gray-900 mb-4">Case Not Found</h2>
           <button 
-            onClick={onBack}
+            onClick={() => {
+              playSound.pageTransition();
+              onBack();
+            }}
+            onMouseEnter={() => playSound.buttonHover()}
             className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
           >
             Return to Cases
@@ -118,7 +124,11 @@ const CustomCaseIntroduction: React.FC<{ caseId: string; onStart: () => void; on
         {/* Header */}
         <div className="flex items-center justify-between mb-12">
           <button 
-            onClick={onBack}
+            onClick={() => {
+              playSound.pageTransition();
+              onBack();
+            }}
+            onMouseEnter={() => playSound.buttonHover()}
             className="text-gray-600 hover:text-gray-900 text-2xl"
           >
             ←
@@ -244,7 +254,11 @@ const CustomCaseIntroduction: React.FC<{ caseId: string; onStart: () => void; on
         {/* Start Button */}
         <div className="text-center">
           <button
-            onClick={onStart}
+            onClick={() => {
+              playSound.caseStart();
+              onStart();
+            }}
+            onMouseEnter={() => playSound.buttonHover()}
             className="px-8 py-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-medium text-lg transition-colors"
           >
             Begin Clinical Assessment →
@@ -329,6 +343,9 @@ const AppContent: React.FC = () => {
     }
 
     if (gameState.showSummary) {
+      // Play case completion sound
+      playSound.caseComplete();
+      
       // Save results to localStorage for case selection display
       if (gameState.xpCalculation && gameState.currentCase) {
         const caseId = gameState.currentCase.id;
@@ -371,7 +388,11 @@ const AppContent: React.FC = () => {
               
               <button 
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full"
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  playSound.buttonClick();
+                  window.location.reload();
+                }}
+                onMouseEnter={() => playSound.buttonHover()}
               >
                 Continue Learning
               </button>
@@ -388,6 +409,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="app-container">
+      <SoundToggle />
       {renderCurrentScreen()}
     </div>
   );
