@@ -16,10 +16,11 @@ export class XPSystem {
     StepType.TREATMENT
   ];
 
-  private static SPEED_THRESHOLDS = {
-    FAST: 180, // 3 minutes
-    NORMAL: 300, // 5 minutes
-    SLOW: 600 // 10 minutes
+  // Time thresholds for multiplier tiers
+  private static TIME_THRESHOLDS = {
+    EXCELLENT: 120, // 2 minutes (green zone - fastest)
+    GOOD: 240,      // 4 minutes (yellow zone - good)
+    POOR: 360       // 6 minutes (red zone - slow)
   };
 
   static createInitialXPMultiplier(): XPMultiplier {
@@ -30,6 +31,92 @@ export class XPSystem {
       fastCompletion: false,
       orderBonus: false
     };
+  }
+
+  /**
+   * XP Multiplier Flow Implementation:
+   * Round 1: Correct & within time → 2x multiplier unlocked
+   * Round 2: First tier time (fast) → +2x (total 4x), Second tier → +1x (total 3x), Missed time → fallback to 2x
+   * Round 3: Depends on previous step performance, maintains or reduces multiplier
+   * Round 4: Final step applies current multiplier to total XP earned
+   */
+  static updateMultiplier(
+    currentMultiplier: XPMultiplier,
+    stepType: StepType,
+    stepResult: StepResult,
+    timeElapsed: number,
+    stepOrder: StepType[]
+  ): XPMultiplier {
+    const newMultiplier = { ...currentMultiplier };
+    
+    // Failed step resets multiplier significantly
+    if (!stepResult.isCorrect) {
+      newMultiplier.current = Math.max(1, newMultiplier.current * 0.5);
+      return newMultiplier;
+    }
+
+    // Round 1: History Taking - Correct & within time unlocks 2x multiplier
+    if (stepType === StepType.HISTORY_TAKING) {
+      if (stepResult.isCorrect && timeElapsed <= this.TIME_THRESHOLDS.POOR) {
+        newMultiplier.current = 2;
+        newMultiplier.step1Bonus = true;
+      } else {
+        newMultiplier.current = 1; // No bonus if too slow or incorrect
+      }
+    }
+    
+    // Round 2: Ordering Tests - Time-based multiplier building
+    else if (stepType === StepType.ORDERING_TESTS && stepResult.isCorrect) {
+      if (timeElapsed <= this.TIME_THRESHOLDS.EXCELLENT) {
+        // First tier time: +2x multiplier (2x + 2x = 4x total)
+        newMultiplier.current = Math.min(newMultiplier.current + 2, 4);
+        newMultiplier.step2Bonus = true;
+        newMultiplier.fastCompletion = true;
+      } else if (timeElapsed <= this.TIME_THRESHOLDS.GOOD) {
+        // Second tier time: +1x multiplier (2x + 1x = 3x total)
+        newMultiplier.current = Math.min(newMultiplier.current + 1, 3);
+        newMultiplier.step2Bonus = true;
+      } else {
+        // Missed time: fallback to 2x (no change from previous step)
+        // newMultiplier.current stays the same (should be 2x from step 1)
+      }
+    }
+    
+    // Round 3: Diagnosis - Depends on previous step performance
+    else if (stepType === StepType.DIAGNOSIS && stepResult.isCorrect) {
+      // From 4x: stay 4x if accurate & quick, otherwise drop to 2x
+      if (newMultiplier.current >= 4) {
+        if (timeElapsed <= this.TIME_THRESHOLDS.GOOD && stepResult.attempts === 1) {
+          // Stay at 4x
+        } else {
+          newMultiplier.current = 2; // Drop to 2x
+        }
+      }
+      // From 3x: stay 3x or drop to 2x
+      else if (newMultiplier.current >= 3) {
+        if (timeElapsed <= this.TIME_THRESHOLDS.POOR && stepResult.attempts === 1) {
+          // Stay at 3x
+        } else {
+          newMultiplier.current = 2; // Drop to 2x
+        }
+      }
+      // From 2x: no boost possible, just maintain
+    }
+    
+    // Round 4: Treatment - Final step applies current multiplier
+    // (No multiplier changes in treatment step, just applies whatever we have)
+    
+    // Order bonus: Following ideal sequence maintains multiplier
+    const currentStepIndex = this.IDEAL_STEP_ORDER.indexOf(stepType);
+    const expectedStepIndex = stepOrder.length;
+    if (currentStepIndex === expectedStepIndex) {
+      newMultiplier.orderBonus = true;
+    } else {
+      // Penalty for wrong order - reduce multiplier
+      newMultiplier.current = Math.max(1, newMultiplier.current * 0.8);
+    }
+    
+    return newMultiplier;
   }
 
   static calculateStepXP(
@@ -51,15 +138,11 @@ export class XPSystem {
       xp *= penalties[stepResult.attempts] || 0.3;
     }
     
-    // Speed bonus
-    if (timeElapsed < this.SPEED_THRESHOLDS.FAST) {
-      xp *= 1.2; // 20% bonus for fast completion
-    } else if (timeElapsed > this.SPEED_THRESHOLDS.SLOW) {
-      xp *= 0.9; // 10% penalty for slow completion
-    }
+    // For the final calculation, we don't apply multipliers per step
+    // Instead, we'll apply the final multiplier to the total case XP
+    // This matches the flow: "Final step applies current multiplier to total XP earned"
     
-    // Apply current multiplier
-    xp *= multiplier.current;
+    // No speed bonus here - that's handled by the multiplier system
     
     // Empathy bonus
     xp += empathyBonus;
@@ -67,47 +150,88 @@ export class XPSystem {
     return Math.round(xp);
   }
 
-  static updateMultiplier(
-    currentMultiplier: XPMultiplier,
-    stepType: StepType,
-    stepResult: StepResult,
-    timeElapsed: number,
-    stepOrder: StepType[]
-  ): XPMultiplier {
-    const newMultiplier = { ...currentMultiplier };
+  static calculateFinalXP(
+    gameCase: Case,
+    stepResults: StepResult[],
+    stepOrder: StepType[],
+    totalTime: number,
+    empathyScore: number,
+    culturalBonus: number = 0
+  ): XPCalculation {
+    let multiplier = this.createInitialXPMultiplier();
+    let baseStepXP = 0;
+    const breakdown: XPCalculation['breakdown'] = [];
     
-    // Step 1 bonus (correct on first try)
-    if (stepType === StepType.HISTORY_TAKING && stepResult.isCorrect && stepResult.attempts === 1) {
-      newMultiplier.step1Bonus = true;
-      newMultiplier.current *= 2;
+    // Calculate each step's base XP (without multipliers)
+    stepResults.forEach((result, index) => {
+      const stepBaseXP = gameCase.baseXP / 4; // Divide base XP among 4 steps
+      
+      // Update multiplier based on this step's performance
+      multiplier = this.updateMultiplier(
+        multiplier, 
+        result.stepType, 
+        result, 
+        result.timeElapsed || 0,
+        stepOrder.slice(0, index)
+      );
+      
+      // Calculate base XP for this step (no multiplier applied yet)
+      const stepXP = this.calculateStepXP(
+        result.stepType,
+        result,
+        stepBaseXP,
+        { current: 1, step1Bonus: false, step2Bonus: false, fastCompletion: false, orderBonus: false }, // No multiplier yet
+        result.timeElapsed || 0,
+        empathyScore * 0.1
+      );
+      
+      baseStepXP += stepXP;
+      
+      breakdown.push({
+        step: result.stepType,
+        score: result.score,
+        multiplier: multiplier.current, // Show current multiplier for display
+        xp: stepXP, // Base XP without multiplier
+        attempts: result.attempts,
+        penalty: result.attempts > 1 ? (1 - (result.attempts === 2 ? 0.8 : 0.5)) : 0
+      });
+    });
+    
+    // Apply final multiplier to total earned XP (this is the key change)
+    const multipliedXP = baseStepXP * multiplier.current;
+    
+    // Additional bonuses
+    let speedBonus = 0;
+    if (totalTime < this.TIME_THRESHOLDS.EXCELLENT * 4) { // Fast completion of all steps
+      speedBonus = gameCase.baseXP * 0.1; // Smaller bonus since multiplier is main reward
     }
     
-    // Step 2 bonus (fast and accurate)
-    if (stepType === StepType.ORDERING_TESTS && stepResult.isCorrect) {
-      if (timeElapsed < this.SPEED_THRESHOLDS.FAST && stepResult.attempts === 1) {
-        newMultiplier.step2Bonus = true;
-        newMultiplier.current = Math.min(newMultiplier.current * 2, 4); // Max 4x
-      } else if (stepResult.attempts === 1) {
-        newMultiplier.current = Math.min(newMultiplier.current * 1.5, 3); // Max 3x if slower
-      }
+    // Order bonus
+    let orderBonus = 0;
+    if (this.isIdealOrder(stepOrder)) {
+      orderBonus = gameCase.baseXP * 0.1; // Smaller bonus since multiplier is main reward
     }
     
-    // Order bonus (following ideal sequence)
-    const currentStepIndex = this.IDEAL_STEP_ORDER.indexOf(stepType);
-    const expectedStepIndex = stepOrder.length;
-    if (currentStepIndex === expectedStepIndex) {
-      newMultiplier.orderBonus = true;
-    } else {
-      // Penalty for wrong order
-      newMultiplier.current *= 0.8;
-    }
+    // Cultural scenario bonus
+    const empathyBonus = culturalBonus;
     
-    // Reset multiplier if step failed
-    if (!stepResult.isCorrect) {
-      newMultiplier.current = Math.max(newMultiplier.current * 0.5, 1);
-    }
+    const finalXP = multipliedXP + speedBonus + orderBonus + empathyBonus;
     
-    return newMultiplier;
+    return {
+      baseXP: gameCase.baseXP,
+      stepMultiplier: multiplier.current,
+      orderBonus,
+      retryPenalty: breakdown.reduce((sum, step) => sum + (step.penalty * gameCase.baseXP / 4), 0),
+      speedBonus,
+      empathyBonus,
+      finalXP: Math.round(finalXP),
+      totalXP: Math.round(finalXP),
+      breakdown: breakdown.map(step => ({
+        ...step,
+        xp: Math.round(step.xp * multiplier.current) // Apply multiplier to display
+      })),
+      badgesEarned: [] // Will be calculated separately
+    };
   }
 
   static checkStepOrderWarning(
@@ -124,103 +248,28 @@ export class XPSystem {
     const warnings: Partial<{ [key in StepType]: StepOrderWarning }> = {
       [StepType.ORDERING_TESTS]: {
         stepType,
-        message: "Consider taking history first to guide your test selection.",
-        severity: 'warning',
-        xpPenalty: 0.1,
-        allowProceed: true
-      },
-      [StepType.DIAGNOSIS]: {
-        stepType,
-        message: "Diagnosis without proper history or tests may be premature.",
+        message: "⚠️ Skipping history may reduce your XP multiplier. Consider taking history first.",
         severity: 'warning',
         xpPenalty: 0.2,
         allowProceed: true
       },
+      [StepType.DIAGNOSIS]: {
+        stepType,
+        message: "⚠️ Diagnosis without proper history or tests will significantly impact your multiplier.",
+        severity: 'warning',
+        xpPenalty: 0.3,
+        allowProceed: true
+      },
       [StepType.TREATMENT]: {
         stepType,
-        message: "Treatment without diagnosis is dangerous. Are you sure?",
+        message: "🚫 Treatment without diagnosis is dangerous and will reset your multiplier to 1x!",
         severity: 'error',
-        xpPenalty: 0.5,
+        xpPenalty: 0.8,
         allowProceed: true
       }
     };
     
     return warnings[stepType] || null;
-  }
-
-  static calculateFinalXP(
-    gameCase: Case,
-    stepResults: StepResult[],
-    stepOrder: StepType[],
-    totalTime: number,
-    empathyScore: number,
-    culturalBonus: number = 0
-  ): XPCalculation {
-    let multiplier = this.createInitialXPMultiplier();
-    let totalXP = 0;
-    const breakdown: XPCalculation['breakdown'] = [];
-    
-    // Calculate each step
-    stepResults.forEach((result, index) => {
-      const stepBaseXP = gameCase.baseXP / 4; // Divide base XP among 4 steps
-      multiplier = this.updateMultiplier(
-        multiplier, 
-        result.stepType, 
-        result, 
-        result.timeElapsed || 0,
-        stepOrder.slice(0, index)
-      );
-      
-      const stepXP = this.calculateStepXP(
-        result.stepType,
-        result,
-        stepBaseXP,
-        multiplier,
-        result.timeElapsed || 0,
-        empathyScore * 0.1
-      );
-      
-      totalXP += stepXP;
-      
-      breakdown.push({
-        step: result.stepType,
-        score: result.score,
-        multiplier: multiplier.current,
-        xp: stepXP,
-        attempts: result.attempts,
-        penalty: result.attempts > 1 ? (1 - (result.attempts === 2 ? 0.8 : 0.5)) : 0
-      });
-    });
-    
-    // Speed bonus for overall completion
-    let speedBonus = 0;
-    if (totalTime < this.SPEED_THRESHOLDS.FAST * 4) { // Fast completion of all steps
-      speedBonus = gameCase.baseXP * 0.3;
-    }
-    
-    // Order bonus
-    let orderBonus = 0;
-    if (this.isIdealOrder(stepOrder)) {
-      orderBonus = gameCase.baseXP * 0.2;
-    }
-    
-    // Cultural scenario bonus
-    const empathyBonus = culturalBonus;
-    
-    const finalXP = totalXP + speedBonus + orderBonus + empathyBonus;
-    
-    return {
-      baseXP: gameCase.baseXP,
-      stepMultiplier: multiplier.current,
-      orderBonus,
-      retryPenalty: breakdown.reduce((sum, step) => sum + (step.penalty * gameCase.baseXP / 4), 0),
-      speedBonus,
-      empathyBonus,
-      finalXP: Math.round(finalXP),
-      totalXP: Math.round(finalXP),
-      breakdown,
-      badgesEarned: [] // Will be calculated separately
-    };
   }
 
   static calculateEmpathyImpact(
@@ -280,5 +329,35 @@ export class XPSystem {
 
   static shouldRestartCase(stepAttempts: { [stepType: string]: number }): boolean {
     return Object.values(stepAttempts).some(attempts => attempts >= 3);
+  }
+
+  /**
+   * Helper method to get multiplier description for UI
+   */
+  static getMultiplierDescription(multiplier: XPMultiplier, stepType: StepType): string {
+    const current = multiplier.current;
+    
+    if (current >= 4) {
+      return "🔥 4x MULTIPLIER! Perfect streak - keep it up!";
+    } else if (current >= 3) {
+      return "⚡ 3x Multiplier - Excellent work!";
+    } else if (current >= 2) {
+      return "✨ 2x Multiplier - Good performance!";
+    } else {
+      return "📈 1x - Build your multiplier with accuracy and speed!";
+    }
+  }
+
+  /**
+   * Helper method to get time zone description
+   */
+  static getTimeZoneDescription(timeElapsed: number): { zone: string; color: string; description: string } {
+    if (timeElapsed <= this.TIME_THRESHOLDS.EXCELLENT) {
+      return { zone: "EXCELLENT", color: "#10B981", description: "Lightning fast! ⚡" };
+    } else if (timeElapsed <= this.TIME_THRESHOLDS.GOOD) {
+      return { zone: "GOOD", color: "#F59E0B", description: "Good pace 👍" };
+    } else {
+      return { zone: "SLOW", color: "#EF4444", description: "Too slow - hurry up! ⏰" };
+    }
   }
 } 

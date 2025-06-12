@@ -1,6 +1,7 @@
 import React from 'react';
 import { CaseData } from '../../data/cases';
 import { StepType } from '../../types/game';
+import { playSound } from '../../utils/soundManager';
 
 interface HistorySummaryProps {
   caseData: CaseData;
@@ -266,7 +267,11 @@ const HistorySummary: React.FC<HistorySummaryProps> = ({
         {/* Continue Button */}
         <div className="text-center">
           <button
-            onClick={onContinue}
+            onClick={() => {
+              playSound.pageTransition();
+              onContinue();
+            }}
+            onMouseEnter={() => playSound.buttonHover()}
             className="px-8 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-medium"
           >
             Continue →

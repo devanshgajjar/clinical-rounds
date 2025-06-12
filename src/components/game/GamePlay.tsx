@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StepType } from '../../types/game';
-import { CaseData, getCaseById, casesData } from '../../data/cases';
+import { CaseData, getGameCaseById, casesData } from '../../data/cases';
 import { ScoringSystem, StepResult } from '../../logic/scoringSystem';
 
 import HistoryTaking from '../steps/HistoryTaking';
@@ -12,7 +12,9 @@ import Treatment from '../steps/Treatment';
 import ResultsScreen from './ResultsScreen';
 import StepFeedback from './StepFeedback';
 import StepSelectionModal from './StepSelectionModal';
+import XPMultiplierDisplay from './XPMultiplierDisplay';
 import { useGame } from '../../context/GameContext';
+import { playSound } from '../../utils/soundManager';
 import '../../styles/duolingo-theme.css';
 import './GamePlay.css';
 
@@ -24,7 +26,8 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
   const {
     getCurrentCase,
     clearXPGlow,
-    dispatch
+    dispatch,
+    gameState
   } = useGame();
   const [caseData, setCaseData] = useState<CaseData | null>(null);
   const [currentStep, setCurrentStep] = useState<StepType>(StepType.HISTORY_TAKING);
@@ -69,7 +72,7 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
     // Use the case ID from props if provided, otherwise default to Dog Bite case
     const targetCaseId = caseId || 'inf-001';
     
-    const loadedCase = getCaseById(targetCaseId);
+    const loadedCase = getGameCaseById(targetCaseId);
     if (loadedCase) {
       setCaseData(loadedCase);
       setGameStartTime(Date.now());
@@ -270,6 +273,7 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
     const currentAttempts = stepAttempts[stepType] + 1;
     const currentTimeElapsed = Math.floor((Date.now() - stepStartTime) / 1000);
     
+    // Get the step result from local calculation
     const stepResult = ScoringSystem.calculateStepResult(
       stepType,
       getCurrentStepNumber(),
@@ -281,15 +285,6 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
     );
     
     console.log('Step result:', stepResult);
-    console.log('XP Calculation:', {
-      baseXP: caseData?.scoring.baseXP,
-      score: stepResult.score,
-      calculatedBaseXP: stepResult.baseXP,
-      multiplier: stepResult.multiplier,
-      attempts: currentAttempts,
-      retryPenalty: stepResult.xpEarned / (stepResult.baseXP * stepResult.multiplier),
-      finalXP: stepResult.xpEarned
-    });
     
     setStepResults(prev => {
       const filtered = prev.filter(r => r.stepType !== stepType);
@@ -450,6 +445,7 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
             {/* Close Button */}
             <button 
               onClick={() => {
+                playSound.pageTransition();
                 dispatch({ type: 'BACK_TO_CASE_SELECTION' });
                 // Clear URL parameter if it exists
                 const url = new URL(window.location.href);
@@ -458,6 +454,7 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
                   window.history.replaceState({}, '', url.toString());
                 }
               }}
+              onMouseEnter={() => playSound.buttonHover()}
               className="text-gray-600 hover:text-gray-900 text-2xl"
               title="Close case"
             >
@@ -473,63 +470,102 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
 
             <div className="w-8"></div> {/* Spacer for balance */}
           </div>
+          
+          {/* XP Multiplier Display - only show during regular steps */}
+          {currentView === 'step' && gameState?.currentXPMultiplier && (
+            <div className="px-4 pb-4">
+              <XPMultiplierDisplay
+                multiplier={gameState.currentXPMultiplier}
+                currentStep={currentStep}
+                timeElapsed={timeElapsed}
+                isStepCompleted={completedSteps.includes(currentStep)}
+                className="max-w-md mx-auto"
+              />
+            </div>
+          )}
         </div>
 
         {/* Main Game Content */}
-        <main className={currentView === 'step' ? 'pb-24' : ''}>
+        <main className="pb-24">
           {renderStepContent()}
         </main>
 
-        {/* Bottom Step Navigation - only show during regular steps */}
-        {currentView === 'step' && (
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-            <div className="max-w-4xl mx-auto px-4 py-3">
-              <div className="flex items-center justify-center gap-6">
-                {Object.values(StepType).map((step) => {
-                  const isActive = step === currentStep;
-                  const isCompleted = completedSteps.includes(step);
-                  
-                  const stepConfig = {
-                    [StepType.HISTORY_TAKING]: { icon: '🩺', label: 'History' },
-                    [StepType.ORDERING_TESTS]: { icon: '📋', label: 'Tests' },
-                    [StepType.DIAGNOSIS]: { icon: '🔍', label: 'Diagnosis' },
-                    [StepType.TREATMENT]: { icon: '📄', label: 'Treatment' }
-                  }[step];
-                  
-                  return (
-                    <div
-                      key={step}
-                      className={`flex flex-col items-center text-center px-4 py-2 rounded-lg transition-colors ${
-                        isActive 
-                          ? 'bg-blue-600 text-white' 
-                          : isCompleted
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-500'
-                      }`}
-                    >
-                      <div className="text-xl mb-1">
-                        {isCompleted ? '✅' : isActive ? stepConfig.icon : stepConfig.icon}
-                      </div>
-                      <span className="text-xs font-medium">
-                        {stepConfig.label}
-                      </span>
+        {/* Bottom Step Navigation - present at all times */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+          <div className="max-w-4xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-center gap-6">
+              {Object.values(StepType).map((step) => {
+                const isActive = step === currentStep && currentView === 'step';
+                const stepResult = stepResults.find(r => r.stepType === step);
+                const isCompleted = stepResult?.isCompleted || false;
+                const canNavigate = isCompleted || step === currentStep;
+                
+                const stepConfig = {
+                  [StepType.HISTORY_TAKING]: { icon: '🩺', label: 'History' },
+                  [StepType.ORDERING_TESTS]: { icon: '📋', label: 'Tests' },
+                  [StepType.DIAGNOSIS]: { icon: '🔍', label: 'Diagnosis' },
+                  [StepType.TREATMENT]: { icon: '📄', label: 'Treatment' }
+                }[step];
+                
+                return (
+                  <button
+                    key={step}
+                    onClick={() => {
+                      if (canNavigate) {
+                        playSound.buttonClick();
+                        setCurrentStep(step);
+                        setCurrentView('step');
+                        setStepStartTime(Date.now());
+                        setTimeElapsed(0);
+                        setShowStepSelection(false);
+                      }
+                    }}
+                    onMouseEnter={() => canNavigate && playSound.buttonHover()}
+                    disabled={!canNavigate}
+                    className={`flex flex-col items-center text-center px-4 py-2 rounded-lg transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-blue-600 text-white shadow-md' 
+                        : isCompleted
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200 cursor-pointer'
+                        : canNavigate
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
+                        : 'bg-gray-50 text-gray-400 cursor-not-allowed opacity-60'
+                    }`}
+                    title={
+                      isCompleted 
+                        ? `Navigate to ${stepConfig.label} (Completed - ${stepResult?.score}%)`
+                        : canNavigate
+                        ? `Navigate to ${stepConfig.label}`
+                        : `Complete previous steps to unlock ${stepConfig.label}`
+                    }
+                  >
+                    <div className="text-xl mb-1">
+                      {isCompleted ? '✅' : stepConfig.icon}
                     </div>
-                  );
-                })}
-              </div>
-              
-              {/* Progress bar */}
-              <div className="mt-3">
-                <div className="w-full bg-gray-200 rounded-full h-1">
-                  <div 
-                    className="bg-blue-600 h-1 rounded-full transition-all duration-300"
-                    style={{ width: `${(completedSteps.length / 4) * 100}%` }}
-                  />
-                </div>
+                    <span className="text-xs font-medium">
+                      {stepConfig.label}
+                    </span>
+                    {stepResult && stepResult.score && (
+                      <span className="text-xs opacity-75">
+                        {stepResult.score}%
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Progress bar */}
+            <div className="mt-3">
+              <div className="w-full bg-gray-200 rounded-full h-1">
+                <div 
+                  className="bg-blue-600 h-1 rounded-full transition-all duration-300"
+                  style={{ width: `${(stepResults.filter(r => r.isCompleted).length / 4) * 100}%` }}
+                />
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Step Selection Modal */}

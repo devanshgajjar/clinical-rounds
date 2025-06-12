@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StepType } from '../../types/game';
 import { CaseData } from '../../data/cases';
+import { playSound } from '../../utils/soundManager';
 
 interface StepSelectionModalProps {
   caseData: CaseData;
@@ -25,6 +26,11 @@ const StepSelectionModal: React.FC<StepSelectionModalProps> = ({
   const availableSteps = allSteps.filter(step => !completedSteps.includes(step));
   const isLastStep = availableSteps.length === 0;
 
+  // Play modal open sound when component mounts
+  useEffect(() => {
+    playSound.modalOpen();
+  }, []);
+
   const stepConfig = {
     [StepType.HISTORY_TAKING]: {
       icon: '🩺',
@@ -48,8 +54,6 @@ const StepSelectionModal: React.FC<StepSelectionModalProps> = ({
     }
   };
 
-
-
   if (isLastStep) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -60,7 +64,11 @@ const StepSelectionModal: React.FC<StepSelectionModalProps> = ({
             You've completed all steps for {caseData.patient.name}'s case.
           </p>
           <button
-            onClick={onFinishCase}
+            onClick={() => {
+              playSound.caseComplete();
+              onFinishCase();
+            }}
+            onMouseEnter={() => playSound.buttonHover()}
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
           >
             View Results
@@ -87,7 +95,11 @@ const StepSelectionModal: React.FC<StepSelectionModalProps> = ({
             return (
               <button
                 key={stepType}
-                onClick={() => onStepSelect(stepType)}
+                onClick={() => {
+                  playSound.selectionMade();
+                  onStepSelect(stepType);
+                }}
+                onMouseEnter={() => playSound.buttonHover()}
                 className="p-6 border-2 border-gray-200 rounded-lg text-left transition-colors hover:bg-gray-50 hover:border-gray-300"
               >
                 <div className="flex items-start gap-4">
@@ -105,8 +117,6 @@ const StepSelectionModal: React.FC<StepSelectionModalProps> = ({
             );
           })}
         </div>
-
-
 
         {/* Progress indicator */}
         <div className="mt-6 text-center">

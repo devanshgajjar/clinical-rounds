@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGame } from '../../context/GameContext';
-import { casesData } from '../../data/cases';
+import { gameCases } from '../../data/cases';
 import { playSound } from '../../utils/soundManager';
 
 const CaseSelection: React.FC = () => {
@@ -68,14 +68,14 @@ const CaseSelection: React.FC = () => {
   };
 
   // Group cases by system
-  const groupedCases = casesData.reduce((acc, caseData) => {
+  const groupedCases = gameCases.reduce((acc, caseData) => {
     const system = caseData.system;
     if (!acc[system]) {
       acc[system] = [];
     }
     acc[system].push(caseData);
     return acc;
-  }, {} as Record<string, typeof casesData>);
+  }, {} as Record<string, typeof gameCases>);
 
   return (
     <div className="min-h-screen bg-white">
@@ -87,7 +87,7 @@ const CaseSelection: React.FC = () => {
             <span>⭐</span>
             <span className="font-medium">{gameState.progress.totalXP} XP</span>
           </div>
-        </div>
+          </div>
 
         {/* Cases */}
         <div className="space-y-12">
@@ -95,14 +95,14 @@ const CaseSelection: React.FC = () => {
             return (
               <div key={systemName}>
                 {/* System Header */}
-                <div className="mb-6">
+                  <div className="mb-6">
                   <h2 className="text-xl font-medium text-gray-900 mb-2">
                     {systemName}
                   </h2>
                   <p className="text-gray-600">
                     Master {systemName.toLowerCase()} conditions and clinical decision making
-                  </p>
-                </div>
+                      </p>
+                    </div>
 
                 {/* Cases Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -111,13 +111,13 @@ const CaseSelection: React.FC = () => {
                     const inProgress = isCaseInProgress(caseData.id);
                     const statusIcon = getCaseStatusIcon(caseData.id);
                     const performanceStars = getPerformanceStars(caseData.id);
-                    
-                    return (
+
+                        return (
                       <button
                         key={caseData.id}
                         onClick={() => handleCaseSelect(caseData.id)}
                         onMouseEnter={() => playSound.buttonHover()}
-                        className={`
+                            className={`
                           text-left p-6 border rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors
                           ${isCompleted ? 'border-green-200 bg-green-50' : 
                             inProgress ? 'border-yellow-200 bg-yellow-50' : 
@@ -128,7 +128,7 @@ const CaseSelection: React.FC = () => {
                           <div className="flex-1">
                             <h3 className="font-medium text-gray-900 mb-1">
                               {caseData.title}
-                            </h3>
+                                </h3>
                             <p className="text-sm text-gray-600 mb-2">
                               {caseData.patient.age}{caseData.patient.gender === 'Male' ? 'M' : 'F'} • {caseData.patient.chiefComplaint}
                             </p>
@@ -167,9 +167,9 @@ const CaseSelection: React.FC = () => {
                           </div>
                         </div>
                       </button>
-                    );
-                  })}
-                </div>
+                        );
+                      })}
+                    </div>
               </div>
             );
           })}

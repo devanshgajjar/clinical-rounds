@@ -13,6 +13,7 @@ import {
   StepOrderWarning
 } from '../types/game';
 import { getCase, defaultRetryMechanics } from '../data/gameData';
+import { getCaseById } from '../data/cases';
 import { XPSystem } from '../logic/xpSystem';
 
 // Initial game state
@@ -92,6 +93,66 @@ type GameAction =
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
     case 'SELECT_CASE': {
+      // First try to get case from cases.ts (new enhanced cases)
+      const caseData = getCaseById(action.payload.caseId);
+      if (caseData) {
+        // Convert CaseData to Case format for game context
+        const gameCase = {
+          id: caseData.id,
+          title: caseData.title,
+          description: caseData.patient.background,
+          bodySystem: caseData.system as any, // Will need to map properly
+          difficulty: caseData.difficulty,
+          baseXP: caseData.scoring.baseXP,
+          idealStepOrder: caseData.scoring.optimalOrder,
+          patientInfo: {
+            name: caseData.patient.name,
+            age: caseData.patient.age,
+            gender: caseData.patient.gender,
+            chiefComplaint: caseData.patient.chiefComplaint,
+            avatar: '🏥' // Default avatar
+          },
+          steps: {
+            [StepType.HISTORY_TAKING]: { questions: [], requiredSelections: 3, maxSelections: 10 },
+            [StepType.ORDERING_TESTS]: { tests: [], requiredSelections: 2, maxSelections: 5 },
+            [StepType.DIAGNOSIS]: { diagnosisOptions: [], requiredSelections: 1 },
+            [StepType.TREATMENT]: { treatmentOptions: [], requiredSelections: 2, maxSelections: 5 }
+          },
+          cutscenes: {
+            [StepType.HISTORY_TAKING]: { intro: '', success: '', failure: '' },
+            [StepType.ORDERING_TESTS]: { intro: '', success: '', failure: '' },
+            [StepType.DIAGNOSIS]: { intro: '', success: '', failure: '' },
+            [StepType.TREATMENT]: { intro: '', success: '', failure: '' }
+          },
+          mentorFeedback: {
+            [StepType.HISTORY_TAKING]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
+            [StepType.ORDERING_TESTS]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
+            [StepType.DIAGNOSIS]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
+            [StepType.TREATMENT]: { success: '', failure: '', hint: '', gentle: '', blunt: '' }
+          },
+          culturalScenarios: [],
+          patientInitialState: {
+            trust: 50,
+            anxiety: 50,
+            satisfaction: 50,
+            currentEmotion: 'happy' as any
+          }
+        };
+
+        return {
+          ...state,
+          currentCase: gameCase,
+          showCaseIntro: true,
+          isInGame: false,
+          showSummary: false,
+          progress: {
+            ...state.progress,
+            currentCase: action.payload.caseId
+          }
+        };
+      }
+
+      // Fallback to original gameData.ts cases
       const gameCase = getCase(action.payload.caseId);
       if (!gameCase) return state;
 
@@ -109,6 +170,74 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
 
     case 'START_CASE': {
+      // First try to get case from cases.ts (new enhanced cases)
+      const caseData = getCaseById(action.payload.caseId);
+      if (caseData) {
+        // Convert CaseData to Case format for game context
+        const gameCase = {
+          id: caseData.id,
+          title: caseData.title,
+          description: caseData.patient.background,
+          bodySystem: caseData.system as any,
+          difficulty: caseData.difficulty,
+          baseXP: caseData.scoring.baseXP,
+          idealStepOrder: caseData.scoring.optimalOrder,
+          patientInfo: {
+            name: caseData.patient.name,
+            age: caseData.patient.age,
+            gender: caseData.patient.gender,
+            chiefComplaint: caseData.patient.chiefComplaint,
+            avatar: '🏥'
+          },
+          steps: {
+            [StepType.HISTORY_TAKING]: { questions: [], requiredSelections: 3, maxSelections: 10 },
+            [StepType.ORDERING_TESTS]: { tests: [], requiredSelections: 2, maxSelections: 5 },
+            [StepType.DIAGNOSIS]: { diagnosisOptions: [], requiredSelections: 1 },
+            [StepType.TREATMENT]: { treatmentOptions: [], requiredSelections: 2, maxSelections: 5 }
+          },
+          cutscenes: {
+            [StepType.HISTORY_TAKING]: { intro: '', success: '', failure: '' },
+            [StepType.ORDERING_TESTS]: { intro: '', success: '', failure: '' },
+            [StepType.DIAGNOSIS]: { intro: '', success: '', failure: '' },
+            [StepType.TREATMENT]: { intro: '', success: '', failure: '' }
+          },
+          mentorFeedback: {
+            [StepType.HISTORY_TAKING]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
+            [StepType.ORDERING_TESTS]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
+            [StepType.DIAGNOSIS]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
+            [StepType.TREATMENT]: { success: '', failure: '', hint: '', gentle: '', blunt: '' }
+          },
+          culturalScenarios: [],
+          patientInitialState: {
+            trust: 50,
+            anxiety: 50,
+            satisfaction: 50,
+            currentEmotion: 'happy' as any
+          }
+        };
+
+        const existingProgress = state.progress.casesInProgress[action.payload.caseId];
+        
+        return {
+          ...state,
+          currentCase: gameCase,
+          currentStepResults: existingProgress?.stepResults || [],
+          currentStepOrder: existingProgress?.stepOrder || [],
+          currentPatientState: existingProgress?.patientState || gameCase.patientInitialState,
+          currentXPMultiplier: XPSystem.createInitialXPMultiplier(),
+          isInGame: false,
+          showSummary: false,
+          showCaseIntro: false,
+          showStepSelection: true,
+          progress: {
+            ...state.progress,
+            currentCase: action.payload.caseId,
+            currentStep: StepType.HISTORY_TAKING
+          }
+        };
+      }
+
+      // Fallback to original gameData.ts cases
       const gameCase = getCase(action.payload.caseId);
       if (!gameCase) return state;
 

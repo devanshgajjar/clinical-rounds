@@ -3,6 +3,7 @@ import { StepType } from '../../types/game';
 import { GameResult } from '../../logic/scoringSystem';
 import { CaseData, casesData } from '../../data/cases';
 import { medicalTests, medicalDiagnoses, medicalTreatments } from '../../data/medicalOptions';
+import { playSound } from '../../utils/soundManager';
 
 interface ResultsScreenProps {
   gameResult: GameResult;
@@ -336,14 +337,22 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ gameResult, caseData, onC
         {/* Action Buttons */}
         <div className="flex justify-center space-x-4 flex-wrap gap-y-3">
           <button 
-            onClick={onReview}
+            onClick={() => {
+              playSound.buttonClick();
+              onReview();
+            }}
+            onMouseEnter={() => playSound.buttonHover()}
             className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
           >
             📖 Review Case Decisions
           </button>
           
           <button 
-            onClick={onContinue}
+            onClick={() => {
+              playSound.pageTransition();
+              onContinue();
+            }}
+            onMouseEnter={() => playSound.buttonHover()}
             className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
           >
             📋 Case Selection
@@ -351,7 +360,11 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ gameResult, caseData, onC
           
           {nextCase && (
             <button 
-              onClick={onNextCase}
+              onClick={() => {
+                playSound.caseStart();
+                onNextCase && onNextCase();
+              }}
+              onMouseEnter={() => playSound.buttonHover()}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
             >
               ➡️ Next Case: {nextCase.title}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useGame } from '../../context/GameContext';
+import { playSound } from '../../utils/soundManager';
 
 const HistoryXPCutscene: React.FC = () => {
   const { gameState, dispatch } = useGame();
@@ -11,7 +12,11 @@ const HistoryXPCutscene: React.FC = () => {
         <div className="text-white text-center">
           <h2 className="text-2xl font-bold mb-4">Case Not Found</h2>
           <button 
-            onClick={() => dispatch({ type: 'BACK_TO_CASE_SELECTION' })}
+            onClick={() => {
+              playSound.pageTransition();
+              dispatch({ type: 'BACK_TO_CASE_SELECTION' });
+            }}
+            onMouseEnter={() => playSound.buttonHover()}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             Return to Cases
@@ -22,10 +27,12 @@ const HistoryXPCutscene: React.FC = () => {
   }
 
   const handleContinue = () => {
+    playSound.pageTransition();
     dispatch({ type: 'CONTINUE_TO_STEP_SELECTION' });
   };
 
   const handleBack = () => {
+    playSound.pageTransition();
     dispatch({ type: 'BACK_TO_CASE_SELECTION' });
   };
 
@@ -51,6 +58,7 @@ const HistoryXPCutscene: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <button 
               onClick={handleBack}
+              onMouseEnter={() => playSound.buttonHover()}
               className="text-white text-xl hover:opacity-80 transition-opacity"
             >
               ←
@@ -150,6 +158,7 @@ const HistoryXPCutscene: React.FC = () => {
           {/* Continue Button */}
           <button
             onClick={handleContinue}
+            onMouseEnter={() => playSound.buttonHover()}
             className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 px-8 rounded-2xl text-xl transition-all duration-300 hover:scale-105 shadow-lg"
           >
             Continue

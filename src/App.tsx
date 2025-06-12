@@ -6,14 +6,14 @@ import StepSelection from './components/pages/StepSelection';
 import HistoryXPCutscene from './components/pages/HistoryXPCutscene';
 import GamePlay from './components/game/GamePlay';
 import { useGame } from './context/GameContext';
-import { getCaseById } from './data/cases';
+import { getGameCaseById } from './data/cases';
 import { playSound } from './utils/soundManager';
 import SoundToggle from './components/ui/SoundToggle';
 import './styles/duolingo-theme.css';
 
 // Custom Case Introduction component for our case data
 const CustomCaseIntroduction: React.FC<{ caseId: string; onStart: () => void; onBack: () => void }> = ({ caseId, onStart, onBack }) => {
-  const caseData = getCaseById(caseId);
+  const caseData = getGameCaseById(caseId);
   
   if (!caseData) {
     return (

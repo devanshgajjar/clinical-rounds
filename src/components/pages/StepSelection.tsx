@@ -13,7 +13,11 @@ const StepSelection: React.FC = () => {
         <div className="text-white text-center">
           <h2 className="text-2xl font-bold mb-4">Case Not Found</h2>
           <button 
-            onClick={() => dispatch({ type: 'BACK_TO_CASE_SELECTION' })}
+            onClick={() => {
+              playSound.pageTransition();
+              dispatch({ type: 'BACK_TO_CASE_SELECTION' });
+            }}
+            onMouseEnter={() => playSound.buttonHover()}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             Return to Cases

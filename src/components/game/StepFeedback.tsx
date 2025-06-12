@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StepType } from '../../types/game';
+import { StepType, XPMultiplier } from '../../types/game';
 import { CaseData } from '../../data/cases';
+import { XPSystem } from '../../logic/xpSystem';
 import { playSound } from '../../utils/soundManager';
 
 interface StepFeedbackProps {
@@ -9,6 +10,9 @@ interface StepFeedbackProps {
   xpEarned: number;
   performance: 'excellent' | 'good' | 'poor' | 'failed';
   score: number;
+  multiplier?: XPMultiplier;
+  previousMultiplier?: XPMultiplier;
+  timeElapsed?: number;
   onContinue: () => void;
 }
 
@@ -18,6 +22,9 @@ const StepFeedback: React.FC<StepFeedbackProps> = ({
   xpEarned,
   performance,
   score,
+  multiplier,
+  previousMultiplier,
+  timeElapsed = 0,
   onContinue
 }) => {
   const [showXP, setShowXP] = useState(false);
@@ -50,6 +57,11 @@ const StepFeedback: React.FC<StepFeedbackProps> = ({
           clearInterval(timer);
         }
         setAnimatedXP(current);
+        
+        // Play incrementing sound for each number change (but not every frame for long animations)
+        if (current % Math.max(1, Math.ceil(increment / 2)) === 0 || current === xpEarned) {
+          playSound.numbersIncrementing();
+        }
       }, 50);
       
       return () => clearInterval(timer);
@@ -144,9 +156,49 @@ const StepFeedback: React.FC<StepFeedbackProps> = ({
               <div className="text-blue-600 text-4xl font-bold mb-2">
                 +{animatedXP} XP
               </div>
-              <div className="text-blue-700 font-medium">
+              <div className="text-blue-700 font-medium mb-3">
                 Score: {score}%
               </div>
+              
+              {/* Multiplier Status */}
+              {multiplier && (
+                <div className="space-y-2">
+                  {/* Current Multiplier Display */}
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-sm text-gray-600">Multiplier:</span>
+                    <div className={`px-3 py-1 rounded-full font-bold ${
+                      multiplier.current >= 4 ? 'bg-red-100 text-red-600' :
+                      multiplier.current >= 3 ? 'bg-orange-100 text-orange-600' :
+                      multiplier.current >= 2 ? 'bg-yellow-100 text-yellow-600' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {multiplier.current.toFixed(1)}x
+                    </div>
+                  </div>
+                  
+                  {/* Multiplier Change */}
+                  {previousMultiplier && previousMultiplier.current !== multiplier.current && (
+                    <div className="text-sm">
+                      {multiplier.current > previousMultiplier.current ? (
+                        <div className="text-green-600 font-medium">
+                          ⬆️ Multiplier increased! ({previousMultiplier.current.toFixed(1)}x → {multiplier.current.toFixed(1)}x)
+                        </div>
+                      ) : (
+                        <div className="text-red-600 font-medium">
+                          ⬇️ Multiplier decreased ({previousMultiplier.current.toFixed(1)}x → {multiplier.current.toFixed(1)}x)
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Time Zone Feedback */}
+                  {timeElapsed > 0 && (
+                    <div className="text-xs text-gray-500">
+                      {XPSystem.getTimeZoneDescription(timeElapsed).description}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

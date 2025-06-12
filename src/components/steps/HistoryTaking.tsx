@@ -28,13 +28,13 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
   // Categorize questions - use only the actual case questions
   const categorizeQuestions = () => {
     return historyData.questions.map(q => ({
-      ...q,
-      mappedCategory: q.category === 'Present Illness' ? 'History of Present Illness (HPI)' :
-                     q.category === 'Past Medical' ? 'Past Medical History' :
+        ...q,
+        mappedCategory: q.category === 'Present Illness' ? 'History of Present Illness (HPI)' :
+                       q.category === 'Past Medical' ? 'Past Medical History' :
                      q.category === 'Social' ? 'Social History' :
                      q.category === 'Family' ? 'Family History' :
                      q.category === 'Review of Systems' ? 'Review of Systems' :
-                     q.category
+                       q.category
     }));
   };
 
@@ -86,10 +86,10 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
         {/* Categories */}
         <div className="space-y-8">
           {categories.map((category) => {
-            const questions = getQuestionsByCategory(category);
-            if (questions.length === 0) return null;
-            
-            return (
+              const questions = getQuestionsByCategory(category);
+              if (questions.length === 0) return null;
+              
+              return (
               <div key={category} className="border border-gray-200 rounded-lg p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
                   {category}
@@ -98,10 +98,10 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
                 <div className="space-y-3">
                   {questions.map((question) => {
                     const isSelected = selectedQuestions.includes(question.id);
-                    
-                    return (
+                        
+                        return (
                       <label
-                        key={question.id}
+                            key={question.id}
                         className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
                       >
                         <input
@@ -111,21 +111,21 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
                           className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                         />
                         <span className="text-gray-900">
-                          {question.text}
+                              {question.text}
                         </span>
                       </label>
-                    );
-                  })}
+                        );
+                      })}
                 </div>
-              </div>
-            );
-          })}
-        </div>
+                </div>
+              );
+            })}
+          </div>
 
         {/* Submit Button */}
         <div className="mt-8 flex justify-center">
-          <button
-            onClick={handleSubmit}
+            <button 
+              onClick={handleSubmit}
             disabled={!isValidSelection || isSubmitting}
             className={`px-8 py-3 rounded-lg font-medium transition-colors ${
               isSubmitting
@@ -139,7 +139,7 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
               ? '✅ Saved!' 
               : `Save History (${selectedQuestions.length} selected)`
             }
-          </button>
+                  </button>
         </div>
       </div>
     </div>

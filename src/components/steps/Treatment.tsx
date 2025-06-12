@@ -117,6 +117,7 @@ const Treatment: React.FC<TreatmentProps> = ({
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
+                // Play typing sound with 30% chance to avoid being too noisy
                 if (e.target.value && Math.random() < 0.3) {
                   playSound.searchType();
                 }

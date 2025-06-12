@@ -2,6 +2,7 @@ import React from 'react';
 import { CaseData } from '../../data/cases';
 import { StepType } from '../../types/game';
 import { medicalTests } from '../../data/medicalOptions';
+import { playSound } from '../../utils/soundManager';
 
 interface TestResultsSummaryProps {
   caseData: CaseData;
@@ -52,11 +53,6 @@ const TestResultsSummary: React.FC<TestResultsSummaryProps> = ({
     }
     const normalized = Math.abs(hash) / 2147483647; // Normalize to 0-1
     return min + (normalized * (max - min));
-  };
-
-  const getConsistentString = (seed: string, options: string[]): string => {
-    const index = Math.floor(getConsistentValue(seed, 0, options.length));
-    return options[Math.min(index, options.length - 1)];
   };
 
   const generateTestResult = (test: any) => {
@@ -380,7 +376,11 @@ const TestResultsSummary: React.FC<TestResultsSummaryProps> = ({
         {/* Continue Button */}
         <div className="text-center">
           <button
-            onClick={onContinue}
+            onClick={() => {
+              playSound.pageTransition();
+              onContinue();
+            }}
+            onMouseEnter={() => playSound.buttonHover()}
             className="px-8 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-medium"
           >
             Continue →

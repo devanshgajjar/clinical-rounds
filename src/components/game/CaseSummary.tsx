@@ -2,6 +2,7 @@ import React from 'react';
 import { useGame } from '../../context/GameContext';
 import { StepType, GameScreen } from '../../types/game';
 import { isOptimalStepOrder } from '../../utils/gameLogic';
+import { playSound } from '../../utils/soundManager';
 import './CaseSummary.css';
 
 const CaseSummary: React.FC = () => {
@@ -51,12 +52,14 @@ const CaseSummary: React.FC = () => {
   const performance = getPerformanceGrade(averageScore);
 
   const handleContinue = () => {
+    playSound.pageTransition();
     completeCase();
     hideSummary();
     navigateToScreen(GameScreen.CASE_SELECT, gameState.progress.currentSystem);
   };
 
   const handleReplay = () => {
+    playSound.buttonClick();
     hideSummary();
     // Restart the same case
     window.location.reload(); // Simple approach for now
@@ -180,10 +183,18 @@ const CaseSummary: React.FC = () => {
         </div>
 
         <div className="summary-actions">
-          <button className="replay-button" onClick={handleReplay}>
+          <button 
+            className="replay-button" 
+            onClick={handleReplay}
+            onMouseEnter={() => playSound.buttonHover()}
+          >
             🔄 Replay Case
           </button>
-          <button className="continue-button" onClick={handleContinue}>
+          <button 
+            className="continue-button" 
+            onClick={handleContinue}
+            onMouseEnter={() => playSound.buttonHover()}
+          >
             Continue to Cases
           </button>
         </div>
