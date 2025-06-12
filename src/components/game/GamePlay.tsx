@@ -27,7 +27,8 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
     getCurrentCase,
     clearXPGlow,
     dispatch,
-    gameState
+    gameState,
+    navigateToScreen
   } = useGame();
   const [caseData, setCaseData] = useState<CaseData | null>(null);
   const [currentStep, setCurrentStep] = useState<StepType>(StepType.HISTORY_TAKING);
@@ -446,17 +447,20 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
             <button 
               onClick={() => {
                 playSound.pageTransition();
-                dispatch({ type: 'BACK_TO_CASE_SELECTION' });
+                
                 // Clear URL parameter if it exists
                 const url = new URL(window.location.href);
                 if (url.searchParams.has('case')) {
                   url.searchParams.delete('case');
                   window.history.replaceState({}, '', url.toString());
                 }
+                
+                // Use proper navigation to case selection
+                dispatch({ type: 'BACK_TO_CASE_SELECTION' });
               }}
               onMouseEnter={() => playSound.buttonHover()}
               className="text-gray-600 hover:text-gray-900 text-2xl"
-              title="Close case"
+              title="Back to Cases"
             >
               ✕
             </button>
