@@ -1,7 +1,9 @@
 import React from 'react';
 import ResultsScreen from '../game/ResultsScreen';
 import { StepType } from '../../types/game';
-import { getCaseById } from '../../data/cases';
+import { casesData } from '../../data/cases';
+
+const getCaseById = (id: string) => casesData.find(c => c.id === id);
 
 const ResultsDemo: React.FC = () => {
   const handleContinue = () => {

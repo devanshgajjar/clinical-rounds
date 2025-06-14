@@ -82,7 +82,7 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
   return (
     <div className="bg-white">
       <div className="max-w-4xl mx-auto p-8">
-
+            
         {/* Categories */}
         <div className="space-y-8">
           {categories.map((category) => {
@@ -97,7 +97,7 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
                 
                 <div className="space-y-3">
                   {questions.map((question) => {
-                    const isSelected = selectedQuestions.includes(question.id);
+                        const isSelected = selectedQuestions.includes(question.id);
                         
                         return (
                       <label
@@ -116,7 +116,7 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
                       </label>
                         );
                       })}
-                </div>
+                    </div>
                 </div>
               );
             })}

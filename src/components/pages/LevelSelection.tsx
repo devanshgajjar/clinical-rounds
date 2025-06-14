@@ -1,14 +1,29 @@
 import React from 'react';
 import { useGame } from '../../context/GameContext';
 import { GameScreen } from '../../types/game';
-import { caseCategories, gameCases } from '../../data/cases';
+import { casesData } from '../../data/cases';
 import '../../styles/duolingo-theme.css';
+
+// Helper to extract unique categories from casesData
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+}
+
+const caseCategories: Category[] = [
+  { id: 'infectious', name: 'Infectious Disease', description: 'Study infectious diseases and their management' },
+  { id: 'cardiology', name: 'Cardiology', description: 'Learn about heart conditions and treatments' },
+  { id: 'neurology', name: 'Neurology', description: 'Explore neurological disorders and their diagnosis' },
+  { id: 'gastro', name: 'Gastroenterology', description: 'Understand digestive system disorders' },
+  { id: 'respiratory', name: 'Respiratory Medicine', description: 'Study respiratory conditions and treatments' }
+];
 
 const LevelSelection: React.FC = () => {
   const { navigateToScreen, gameState } = useGame();
 
   const getCategoryProgress = (categoryId: string) => {
-    const categoryCase = gameCases.filter(c => c.categoryId === categoryId);
+    const categoryCase = casesData.filter(c => c.categoryId === categoryId);
     const completedCases = gameState.progress.completedCases.filter(caseId =>
       categoryCase.some(c => c.id === caseId)
     );
@@ -70,11 +85,16 @@ const LevelSelection: React.FC = () => {
               const progress = getCategoryProgress(category.id);
               const progressPercentage = progress.total > 0 ? 
                 (progress.completed / progress.total) * 100 : 0;
-              const categoryCase = gameCases.filter(c => c.categoryId === category.id);
+              const categoryCase = casesData.filter(c => c.categoryId === category.id);
               const isUnlocked = gameState.progress.unlockedSystems.includes(category.id) || category.id === 'infectious';
               const isCompleted = progress.completed === progress.total && progress.total > 0;
               const config = getCategoryConfig(category.id);
               
+              // Calculate XP range safely
+              const xpRewards = categoryCase.map(c => c.xpReward ?? 0);
+              const minXP = xpRewards.length > 0 ? Math.min(...xpRewards) : 0;
+              const maxXP = xpRewards.length > 0 ? Math.max(...xpRewards) : 0;
+
               return (
                 <div 
                   key={category.id}
@@ -140,7 +160,7 @@ const LevelSelection: React.FC = () => {
                       <div>
                         <span className="text-secondary">XP Range: </span>
                         <span className="font-semibold text-primary">
-                          {Math.min(...categoryCase.map(c => c.xpReward))} - {Math.max(...categoryCase.map(c => c.xpReward))}
+                          {minXP} - {maxXP}
                         </span>
                       </div>
                       <div className="flex gap-1">
@@ -149,7 +169,7 @@ const LevelSelection: React.FC = () => {
                             key={difficulty}
                             className="w-3 h-3 rounded-full"
                             style={{ 
-                              background: categoryCase.some(c => c.stars >= difficulty) 
+                              background: categoryCase.some(c => (c.stars ?? 0) >= difficulty) 
                                 ? config.color 
                                 : 'var(--gray-200)' 
                             }}

@@ -73,6 +73,8 @@ export const medicalTests: MedicalTest[] = [
   { id: 'chest-xray', name: 'Chest X-ray', category: 'Imaging', cost: 80 },
   { id: 'abdominal-xray', name: 'Abdominal X-ray', category: 'Imaging', cost: 90 },
   { id: 'hand-xray', name: 'X-ray Hand', category: 'Imaging', cost: 120 },
+  { id: 'ankle-xray', name: 'Ankle X-ray (3 views)', category: 'Imaging', cost: 120 },
+  { id: 'foot-xray', name: 'Foot X-ray', category: 'Imaging', cost: 100 },
   { id: 'knee-xray', name: 'X-ray Knee', category: 'Imaging', cost: 100 },
   { id: 'spine-xray', name: 'X-ray Spine', category: 'Imaging', cost: 110 },
   { id: 'pelvis-xray', name: 'X-ray Pelvis', category: 'Imaging', cost: 95 },
@@ -86,6 +88,7 @@ export const medicalTests: MedicalTest[] = [
   { id: 'ct-angiogram', name: 'CT Angiogram Head/Neck', category: 'Imaging', cost: 800 },
   { id: 'ct-pe', name: 'CT Pulmonary Embolism Protocol', category: 'Imaging', cost: 600 },
   { id: 'ct-coronary', name: 'CT Coronary Angiogram', category: 'Imaging', cost: 750 },
+  { id: 'ct-ankle', name: 'CT Ankle', category: 'Imaging', cost: 400 },
   
   // Imaging - MRI
   { id: 'mri-brain', name: 'MRI Brain', category: 'Imaging', cost: 800 },
@@ -93,6 +96,7 @@ export const medicalTests: MedicalTest[] = [
   { id: 'mri-knee', name: 'MRI Knee', category: 'Imaging', cost: 700 },
   { id: 'mri-shoulder', name: 'MRI Shoulder', category: 'Imaging', cost: 750 },
   { id: 'mri-cardiac', name: 'Cardiac MRI', category: 'Imaging', cost: 1200 },
+  { id: 'mri-ankle', name: 'Ankle MRI', category: 'Imaging', cost: 800 },
   
   // Imaging - Ultrasound
   { id: 'echo-us', name: 'Echocardiogram (Ultrasound)', category: 'Imaging', cost: 200 },
@@ -101,6 +105,7 @@ export const medicalTests: MedicalTest[] = [
   { id: 'thyroid-us', name: 'Thyroid Ultrasound', category: 'Imaging', cost: 160 },
   { id: 'carotid-us', name: 'Carotid Ultrasound', category: 'Imaging', cost: 220 },
   { id: 'renal-us', name: 'Renal Ultrasound', category: 'Imaging', cost: 190 },
+  { id: 'ankle-us', name: 'Ankle Ultrasound', category: 'Imaging', cost: 200 },
   
   // Microbiology
   { id: 'blood-culture', name: 'Blood Culture', category: 'Microbiology', cost: 60 },
@@ -134,6 +139,7 @@ export const medicalTests: MedicalTest[] = [
   { id: 'emg', name: 'Electromyography (EMG)', category: 'Neurological', cost: 180 },
   { id: 'nerve-conduction', name: 'Nerve Conduction Study', category: 'Neurological', cost: 160 },
   { id: 'neuro-exam', name: 'Detailed Neurological Examination', category: 'Neurological', cost: 50 },
+  { id: 'neurovascular-assessment', name: 'Neurovascular Assessment', category: 'Neurological', cost: 0 },
   
   // Urinalysis
   { id: 'urinalysis', name: 'Urinalysis', category: 'Urinalysis', cost: 20 },
@@ -162,6 +168,7 @@ export const medicalTests: MedicalTest[] = [
   { id: 'endoscopy', name: 'Upper Endoscopy (EGD)', category: 'Other', cost: 500 },
   { id: 'colonoscopy', name: 'Colonoscopy', category: 'Other', cost: 600 },
   { id: 'bone-density', name: 'DEXA Bone Density Scan', category: 'Other', cost: 150 },
+  { id: 'bone-scan', name: 'Bone Scan', category: 'Imaging', cost: 600 },
   { id: 'h-pylori', name: 'H. pylori Test', category: 'Other', cost: 50 },
 ];
 
@@ -244,6 +251,11 @@ export const medicalDiagnoses: MedicalDiagnosis[] = [
   
   // Musculoskeletal
   { id: 'fracture', name: 'Bone Fracture', category: 'Musculoskeletal', icd10: 'S72.9' },
+  { id: 'lateral-malleolus-fracture', name: 'Lateral Malleolus Fracture (Weber B)', category: 'Musculoskeletal', icd10: 'S82.6' },
+  { id: 'ankle-sprain', name: 'Ankle Sprain', category: 'Musculoskeletal', icd10: 'S93.4' },
+  { id: 'achilles-rupture', name: 'Achilles Tendon Rupture', category: 'Musculoskeletal', icd10: 'S86.0' },
+  { id: 'calcaneus-fracture', name: 'Calcaneus Fracture', category: 'Musculoskeletal', icd10: 'S92.0' },
+  { id: 'soft-tissue-contusion', name: 'Soft Tissue Contusion', category: 'Musculoskeletal', icd10: 'S90.0' },
   { id: 'arthritis', name: 'Osteoarthritis', category: 'Musculoskeletal', icd10: 'M19.9' },
   { id: 'rheumatoid-arthritis', name: 'Rheumatoid Arthritis', category: 'Musculoskeletal', icd10: 'M06.9' },
   { id: 'back-pain', name: 'Lower Back Pain', category: 'Musculoskeletal', icd10: 'M54.5' },

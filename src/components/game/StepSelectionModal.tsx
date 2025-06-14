@@ -23,7 +23,7 @@ const StepSelectionModal: React.FC<StepSelectionModalProps> = ({
     StepType.TREATMENT
   ];
 
-  const availableSteps = allSteps.filter(step => !completedSteps.includes(step));
+  const availableSteps = allSteps.filter(step => !completedSteps.includes(step) || (caseData.isEmergency && step === StepType.TREATMENT));
   const isLastStep = availableSteps.length === 0;
 
   // Play modal open sound when component mounts
@@ -87,11 +87,9 @@ const StepSelectionModal: React.FC<StepSelectionModalProps> = ({
             What would you like to do next for {caseData.patient.name}?
           </p>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {availableSteps.map((stepType) => {
             const config = stepConfig[stepType];
-            
             return (
               <button
                 key={stepType}
@@ -117,7 +115,6 @@ const StepSelectionModal: React.FC<StepSelectionModalProps> = ({
             );
           })}
         </div>
-
         {/* Progress indicator */}
         <div className="mt-6 text-center">
           <div className="text-sm text-gray-500">

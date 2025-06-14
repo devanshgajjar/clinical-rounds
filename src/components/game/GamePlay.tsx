@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StepType } from '../../types/game';
-import { CaseData, getGameCaseById, casesData } from '../../data/cases';
+import { CaseData, casesData } from '../../data/cases';
 import { ScoringSystem, StepResult } from '../../logic/scoringSystem';
 
 import HistoryTaking from '../steps/HistoryTaking';
@@ -57,6 +57,10 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
   const [showStepSelection, setShowStepSelection] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<StepType[]>([]);
 
+  // Add state for emergency bonus
+  const [emergencyBonusAwarded, setEmergencyBonusAwarded] = useState(false);
+  const [showEmergencyBonus, setShowEmergencyBonus] = useState(false);
+
   const maxAttempts = 3;
   
   // Helper function to get current step number
@@ -65,14 +69,15 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
     return Math.min(completedSteps + 1, 4);
   };
   
-
-
+  // Add this helper function after imports
+  const getCaseById = (id: string) => casesData.find(c => c.id === id);
+  
   // Load case data - prioritize case from prop, then comprehensive Dog Bite case from cases.ts
   useEffect(() => {
     // Use the case ID from props if provided, otherwise default to Dog Bite case
     const targetCaseId = caseId || 'inf-001';
     
-    const loadedCase = getGameCaseById(targetCaseId);
+    const loadedCase = getCaseById(targetCaseId);
     if (loadedCase) {
       setCaseData(loadedCase);
       setGameStartTime(Date.now());
@@ -308,6 +313,18 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
     } else if (stepType === StepType.ORDERING_TESTS) {
       setTestSelections(selectedAnswers);
     }
+
+    if (
+      caseData?.isEmergency &&
+      stepType === StepType.TREATMENT &&
+      !emergencyBonusAwarded &&
+      !completedSteps.includes(StepType.DIAGNOSIS) &&
+      !completedSteps.includes(StepType.ORDERING_TESTS)
+    ) {
+      setEmergencyBonusAwarded(true);
+      setShowEmergencyBonus(true);
+      // Optionally, add bonus XP to the stepResult or gameState here
+    }
   };
 
   const handleStepRetry = (stepType: StepType) => {
@@ -504,7 +521,7 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
                 const isActive = step === currentStep && currentView === 'step';
                 const stepResult = stepResults.find(r => r.stepType === step);
                 const isCompleted = stepResult?.isCompleted || false;
-                const canNavigate = isCompleted || step === currentStep;
+                const canNavigate = isCompleted || step === currentStep || (caseData?.isEmergency && step === StepType.TREATMENT);
                 
                 const stepConfig = {
                   [StepType.HISTORY_TAKING]: { icon: '🩺', label: 'History' },
@@ -582,6 +599,25 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
           onStepSelect={handleStepSelect}
           onFinishCase={handleFinishCase}
         />
+      )}
+
+      {/* Emergency Bonus Modal */}
+      {showEmergencyBonus && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-md mx-4 text-center">
+            <div className="text-6xl mb-4">🚨</div>
+            <h2 className="text-2xl font-bold text-green-700 mb-2">Emergency Recognized!</h2>
+            <p className="text-gray-700 mb-6">
+              You recognized the emergency and provided urgent treatment. Bonus XP awarded!
+            </p>
+            <button
+              onClick={() => setShowEmergencyBonus(false)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

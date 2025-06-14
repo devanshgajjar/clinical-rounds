@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGame } from '../../context/GameContext';
-import { gameCases } from '../../data/cases';
+import { casesData } from '../../data/cases';
 import { playSound } from '../../utils/soundManager';
 
 const CaseSelection: React.FC = () => {
@@ -68,14 +68,14 @@ const CaseSelection: React.FC = () => {
   };
 
   // Group cases by system
-  const groupedCases = gameCases.reduce((acc, caseData) => {
+  const groupedCases = casesData.reduce((acc, caseData) => {
     const system = caseData.system;
     if (!acc[system]) {
       acc[system] = [];
     }
     acc[system].push(caseData);
     return acc;
-  }, {} as Record<string, typeof gameCases>);
+  }, {} as Record<string, typeof casesData>);
 
   return (
     <div className="min-h-screen bg-white">

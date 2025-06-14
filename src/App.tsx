@@ -6,14 +6,16 @@ import StepSelection from './components/pages/StepSelection';
 import HistoryXPCutscene from './components/pages/HistoryXPCutscene';
 import GamePlay from './components/game/GamePlay';
 import { useGame } from './context/GameContext';
-import { getGameCaseById } from './data/cases';
+import { casesData } from './data/cases';
 import { playSound } from './utils/soundManager';
 import SoundToggle from './components/ui/SoundToggle';
 import './styles/duolingo-theme.css';
 
+const getCaseById = (id: string) => casesData.find(c => c.id === id);
+
 // Custom Case Introduction component for our case data
 const CustomCaseIntroduction: React.FC<{ caseId: string; onStart: () => void; onBack: () => void }> = ({ caseId, onStart, onBack }) => {
-  const caseData = getGameCaseById(caseId);
+  const caseData = getCaseById(caseId);
   
   if (!caseData) {
     return (
@@ -300,8 +302,6 @@ const AppContent: React.FC = () => {
     url.searchParams.delete('case');
     window.history.replaceState({}, '', url.toString());
   };
-
-
 
   const renderCurrentScreen = () => {
     console.log('App: renderCurrentScreen - isInGame:', gameState.isInGame, 'showCaseIntro:', gameState.showCaseIntro, 'showStepSelection:', gameState.showStepSelection, 'showXPCutscene:', gameState.showXPCutscene, 'showSummary:', gameState.showSummary);

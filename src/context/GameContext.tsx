@@ -13,7 +13,7 @@ import {
   StepOrderWarning
 } from '../types/game';
 import { getCase, defaultRetryMechanics } from '../data/gameData';
-import { getCaseById } from '../data/cases';
+import { casesData } from '../data/cases';
 import { XPSystem } from '../logic/xpSystem';
 
 // Initial game state
@@ -664,4 +664,6 @@ export const useGame = (): GameContextType => {
     throw new Error('useGame must be used within a GameProvider');
   }
   return context;
-}; 
+};
+
+const getCaseById = (id: string) => casesData.find(c => c.id === id); 
