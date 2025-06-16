@@ -96,7 +96,6 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
   return (
     <div className="bg-white">
       <div className="max-w-6xl mx-auto p-8">
-
         {/* Patient Summary */}
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Patient Summary</h2>
@@ -105,7 +104,6 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
             <p><strong>Chief Complaint:</strong> {caseData.patient.chiefComplaint}</p>
           </div>
         </div>
-
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">
@@ -115,7 +113,6 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                // Play typing sound with 30% chance to avoid being too noisy
                 if (e.target.value && Math.random() < 0.3) {
                   playSound.searchType();
                 }
@@ -130,7 +127,6 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
             </div>
           </div>
         </div>
-
         {/* Instructions */}
         <div className="mb-6 flex justify-between items-center">
           <p className="text-gray-600">
@@ -145,95 +141,69 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
             </div>
           )}
         </div>
-
-        {/* Categories */}
-        <div className="space-y-8">
-          {availableCategories.map((category) => {
-            const diagnoses = getDiagnosesByCategory(category);
-            if (diagnoses.length === 0) return null;
-            
-            return (
-              <div key={category} className="border border-gray-200 rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
-                  {category} ({diagnoses.length} diagnoses)
-                </h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {diagnoses.map((diagnosis) => {
-                    const isSelected = selectedDiagnoses.includes(diagnosis.id);
-                    const isOriginal = isOriginalDiagnosis(diagnosis.id);
-                    const isCorrect = isCorrectDiagnosis(diagnosis.id);
-                    
-                    return (
-                      <label
-                        key={diagnosis.id}
-                        className={`flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
-                          isCorrect ? 'border-green-300 bg-green-50' :
-                          isOriginal ? 'border-blue-300 bg-blue-50' :
-                          'border-gray-200'
-                        }`}
-                      >
-                        <input
-                          type={diagnosisData.type === 'multiple-choice' ? 'radio' : 'checkbox'}
-                          checked={isSelected}
-                          onChange={() => handleDiagnosisToggle(diagnosis.id)}
-                          className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                          name={diagnosisData.type === 'multiple-choice' ? 'diagnosis' : undefined}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <span className={`text-lg font-medium ${
-                            isCorrect ? 'text-green-900' : 'text-gray-900'
-                          }`}>
-                            {diagnosis.name}
-                            {isCorrect && <span className="text-green-600 ml-1">✓</span>}
-                          </span>
-                          <div className="text-sm text-gray-500 mt-1">
-                            {diagnosis.icd10 && `ICD-10: ${diagnosis.icd10}`}
-                            {diagnosis.description && ` • ${diagnosis.description}`}
-                          </div>
+        {/* Search Results (only show if searchQuery is not empty) */}
+        {searchQuery.trim() !== '' && (
+          <div className="space-y-4">
+            {filteredDiagnoses.length === 0 ? (
+              <div className="text-gray-500">No diagnoses found.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {filteredDiagnoses.map((diagnosis) => {
+                  const isSelected = selectedDiagnoses.includes(diagnosis.id);
+                  const isOriginal = isOriginalDiagnosis(diagnosis.id);
+                  const isCorrect = isCorrectDiagnosis(diagnosis.id);
+                  return (
+                    <label
+                      key={diagnosis.id}
+                      className={`flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
+                        isCorrect ? 'border-green-300 bg-green-50' :
+                        isOriginal ? 'border-blue-300 bg-blue-50' :
+                        'border-gray-200'
+                      }`}
+                    >
+                      <input
+                        type={diagnosisData.type === 'multiple-choice' ? 'radio' : 'checkbox'}
+                        checked={isSelected}
+                        onChange={() => handleDiagnosisToggle(diagnosis.id)}
+                        className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        name={diagnosisData.type === 'multiple-choice' ? 'diagnosis' : undefined}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span className={`text-lg font-medium ${
+                          isCorrect ? 'text-green-900' : 'text-gray-900'
+                        }`}>
+                          {diagnosis.name}
+                          {isCorrect && <span className="text-green-600 ml-1">✓</span>}
+                        </span>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {diagnosis.icd10 && `ICD-10: ${diagnosis.icd10}`}
+                          {diagnosis.description && ` • ${diagnosis.description}`}
                         </div>
-                      </label>
-                    );
-                  })}
-                </div>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-
-        {/* Legend */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-900 mb-2">Legend:</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-green-300 bg-green-50 rounded"></div>
-              <span>✓ Correct diagnosis</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-blue-300 bg-blue-50 rounded"></div>
-              <span>Case-relevant option</span>
-            </div>
+            )}
           </div>
-        </div>
-
+        )}
         {/* Submit Button */}
-        <div className="flex justify-center mt-8">
+        <div className="mt-8 flex gap-4">
           <button
             onClick={handleSubmit}
             disabled={!isValidSelection || isSubmitting}
-            className={`px-8 py-3 rounded-lg font-medium transition-colors ${
-              isSubmitting
-                ? 'bg-green-600 text-white'
-                : isValidSelection
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
+            className="btn btn-primary px-8 py-3 text-lg font-semibold rounded-lg disabled:opacity-60"
           >
-            {isSubmitting 
-              ? '✅ Submitted!' 
-              : `Submit Diagnosis (${selectedDiagnoses.length} selected)`
-            }
+            Submit
           </button>
+          {attempts < maxAttempts && onRetry && (
+            <button
+              onClick={onRetry}
+              className="btn btn-secondary px-8 py-3 text-lg font-semibold rounded-lg"
+            >
+              Retry
+            </button>
+          )}
         </div>
       </div>
     </div>

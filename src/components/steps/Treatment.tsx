@@ -98,7 +98,6 @@ const Treatment: React.FC<TreatmentProps> = ({
   return (
     <div className="bg-white">
       <div className="max-w-6xl mx-auto p-8">
-
         {/* Patient Summary */}
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Patient Summary</h2>
@@ -107,7 +106,6 @@ const Treatment: React.FC<TreatmentProps> = ({
             <p><strong>Chief Complaint:</strong> {caseData.patient.chiefComplaint}</p>
           </div>
         </div>
-
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">
@@ -117,7 +115,6 @@ const Treatment: React.FC<TreatmentProps> = ({
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                // Play typing sound with 30% chance to avoid being too noisy
                 if (e.target.value && Math.random() < 0.3) {
                   playSound.searchType();
                 }
@@ -132,7 +129,6 @@ const Treatment: React.FC<TreatmentProps> = ({
             </div>
           </div>
         </div>
-
         {/* Selection Info */}
         <div className="mb-6 flex justify-between items-center">
           <div className="text-sm text-gray-600">
@@ -144,107 +140,77 @@ const Treatment: React.FC<TreatmentProps> = ({
             </div>
           )}
         </div>
-
-        {/* Categories */}
-        <div className="space-y-8">
-          {availableCategories.map((category) => {
-            const treatments = getTreatmentsByCategory(category);
-            if (treatments.length === 0) return null;
-            
-            return (
-              <div key={category} className="border border-gray-200 rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
-                  {category} ({treatments.length} treatments)
-                </h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {treatments.map((treatment) => {
-                    const isSelected = selectedTreatments.includes(treatment.id);
-                    const isDisabled = !isSelected && selectedTreatments.length >= maxAllowed;
-                    const isOriginal = isOriginalTreatment(treatment.id);
-                    const isNecessary = isNecessaryTreatment(treatment.id);
-                    const isContraindicated = isContraindicatedTreatment(treatment.id);
-                    
-                    return (
-                      <label
-                        key={treatment.id}
-                        className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                          isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
-                        } ${
-                          isContraindicated ? 'border-red-300 bg-red-50' :
-                          isNecessary ? 'border-green-300 bg-green-50' :
-                          isOriginal ? 'border-blue-300 bg-blue-50' :
-                          'border-gray-200'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => !isDisabled && handleTreatmentToggle(treatment.id)}
-                          disabled={isDisabled}
-                          className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <span className={`text-sm font-medium ${
-                            isContraindicated ? 'text-red-900' :
-                            isNecessary ? 'text-green-900' :
-                            'text-gray-900'
-                          }`}>
-                            {treatment.name}
-                            {isNecessary && <span className="text-green-600 ml-1">✓</span>}
-                            {isContraindicated && <span className="text-red-600 ml-1">⚠️</span>}
-                          </span>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {treatment.dosage && `Dosage: ${treatment.dosage}`}
-                            {treatment.description && ` • ${treatment.description}`}
-                          </div>
+        {/* Search Results (only show if searchQuery is not empty) */}
+        {searchQuery.trim() !== '' && (
+          <div className="space-y-4">
+            {filteredTreatments.length === 0 ? (
+              <div className="text-gray-500">No treatments found.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {filteredTreatments.map((treatment) => {
+                  const isSelected = selectedTreatments.includes(treatment.id);
+                  const isDisabled = !isSelected && selectedTreatments.length >= maxAllowed;
+                  const isOriginal = isOriginalTreatment(treatment.id);
+                  const isNecessary = isNecessaryTreatment(treatment.id);
+                  const isContraindicated = isContraindicatedTreatment(treatment.id);
+                  return (
+                    <label
+                      key={treatment.id}
+                      className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                        isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                      } ${
+                        isContraindicated ? 'border-red-300 bg-red-50' :
+                        isNecessary ? 'border-green-300 bg-green-50' :
+                        isOriginal ? 'border-blue-300 bg-blue-50' :
+                        'border-gray-200'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => !isDisabled && handleTreatmentToggle(treatment.id)}
+                        disabled={isDisabled}
+                        className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span className={`text-sm font-medium ${
+                          isContraindicated ? 'text-red-900' :
+                          isNecessary ? 'text-green-900' :
+                          'text-gray-900'
+                        }`}>
+                          {treatment.name}
+                          {isNecessary && <span className="text-green-600 ml-1">✓</span>}
+                          {isContraindicated && <span className="text-red-600 ml-1">⚠️</span>}
+                        </span>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {treatment.dosage && `Dosage: ${treatment.dosage}`}
+                          {treatment.description && ` • ${treatment.description}`}
                         </div>
-                      </label>
-                    );
-                  })}
-                </div>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-
-        {/* Legend */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-900 mb-2">Legend:</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-green-300 bg-green-50 rounded"></div>
-              <span>✓ Necessary/Recommended</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-blue-300 bg-blue-50 rounded"></div>
-              <span>Case-relevant option</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-red-300 bg-red-50 rounded"></div>
-              <span>⚠️ Contraindicated/Dangerous</span>
-            </div>
+            )}
           </div>
-        </div>
-
+        )}
         {/* Submit Button */}
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex gap-4">
           <button
             onClick={handleSubmit}
             disabled={!isValidSelection || isSubmitting}
-            className={`px-8 py-3 rounded-lg font-medium transition-colors ${
-              isSubmitting
-                ? 'bg-green-600 text-white'
-                : isValidSelection
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            }`}
+            className="btn btn-primary px-8 py-3 text-lg font-semibold rounded-lg disabled:opacity-60"
           >
-            {isSubmitting 
-              ? '✅ Submitted!' 
-              : `Submit Treatment Plan (${selectedTreatments.length} selected)`
-            }
+            Submit
           </button>
+          {attempts < maxAttempts && onRetry && (
+            <button
+              onClick={onRetry}
+              className="btn btn-secondary px-8 py-3 text-lg font-semibold rounded-lg"
+            >
+              Retry
+            </button>
+          )}
         </div>
       </div>
     </div>

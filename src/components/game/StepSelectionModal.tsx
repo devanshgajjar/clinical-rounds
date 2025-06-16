@@ -23,7 +23,10 @@ const StepSelectionModal: React.FC<StepSelectionModalProps> = ({
     StepType.TREATMENT
   ];
 
-  const availableSteps = allSteps.filter(step => !completedSteps.includes(step) || (caseData.isEmergency && step === StepType.TREATMENT));
+  const availableSteps = allSteps.filter(
+    step => !completedSteps.includes(step) ||
+      (caseData.isEmergency && step === StepType.TREATMENT && !completedSteps.includes(StepType.TREATMENT))
+  );
   const isLastStep = availableSteps.length === 0;
 
   // Play modal open sound when component mounts
