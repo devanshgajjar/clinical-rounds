@@ -15,7 +15,7 @@ export const casesData: CaseData[] = [
     id: 'inf-001',
     title: 'Dog Bite Infection',
     system: 'Infectious Disease',
-    difficulty: '3',
+    difficulty: 3,
     patient: {
       name: 'Sarah Martinez',
       age: 28,
@@ -101,7 +101,7 @@ export const casesData: CaseData[] = [
     id: 'card-001',
     title: 'Exercise-Induced Syncope',
     system: 'Cardiology',
-    difficulty: 'medium',
+    difficulty: 3,
     patient: {
       name: 'Robert Wilson',
       age: 19,
@@ -211,7 +211,7 @@ export const casesData: CaseData[] = [
     id: 'neuro-001',
     title: 'Acute Stroke Presentation',
     system: 'Neurology',
-    difficulty: 'medium',
+    difficulty: 3,
     patient: {
       name: 'Eleanor Thompson',
       age: 67,
@@ -301,7 +301,7 @@ export const casesData: CaseData[] = [
     stars: 4,
     unlocked: true,
     system: 'Gastroenterology',
-    difficulty: 'medium',
+    difficulty: 3,
     patient: {
       name: 'Michael Chen',
       age: 22,
@@ -398,7 +398,7 @@ export const casesData: CaseData[] = [
     stars: 3,
     unlocked: true,
     system: 'Endocrinology',
-    difficulty: 'medium',
+    difficulty: 3,
     patient: {
       name: 'Ashley Rodriguez',
       age: 16,
@@ -494,7 +494,7 @@ export const casesData: CaseData[] = [
     stars: 2,
     unlocked: true,
     system: 'Orthopedics',
-    difficulty: 'medium',
+    difficulty: 3,
     patient: {
       name: 'David Thompson',
       age: 35,

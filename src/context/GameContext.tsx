@@ -624,7 +624,7 @@ const convertCaseDataToCase = (caseData: CaseData): Case => {
     title: caseData.title,
     description: caseData.patient.background || '',
     bodySystem: caseData.system as BodySystem,
-    difficulty: parseInt(caseData.difficulty) as 1 | 2 | 3 | 4 | 5,
+    difficulty: caseData.difficulty as 1 | 2 | 3 | 4 | 5,
     baseXP: caseData.scoring?.baseXP || 100,
     idealStepOrder: caseData.scoring?.optimalOrder || [],
     patientInfo: {

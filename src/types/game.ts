@@ -1,5 +1,3 @@
-// Clinical Rounds Game Type Definitions
-
 export enum BodySystem {
   CARDIOVASCULAR = 'cardiovascular',
   NEUROLOGY = 'neurology',
@@ -346,7 +344,7 @@ export interface CaseData {
   stars?: number;
   unlocked?: boolean;
   system: string;
-  difficulty: string;
+  difficulty: number;
   patient: {
     name: string;
     age: number;
