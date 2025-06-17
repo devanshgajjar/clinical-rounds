@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { StepType } from '../../types/game';
 import { GameResult } from '../../logic/scoringSystem';
-import { CaseData, casesData } from '../../data/cases';
+import { casesData } from '../../data/cases';
 import { medicalTests, medicalDiagnoses, medicalTreatments } from '../../data/medicalOptions';
 import { playSound } from '../../utils/soundManager';
+import { CaseData } from '../../types/game';
+import { useGame } from '../../context/GameContext';
 
 interface ResultsScreenProps {
   gameResult: GameResult;
@@ -97,15 +99,16 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ gameResult, caseData, onC
     switch (stepType) {
       case StepType.HISTORY_TAKING:
         const historyData = caseData.steps[StepType.HISTORY_TAKING];
-        return historyData.questions
-          .filter((q: any) => q.relevant)
-          .map((q: any) => ({ id: q.id, name: q.text }));
+        return historyData.correctAnswers.map((id: string) => {
+          const q = historyData.questions.find((q: any) => q.id === id);
+          return q ? { id: q.id, name: q.text } : null;
+        }).filter(Boolean);
 
       case StepType.ORDERING_TESTS:
         const correctTestIds = caseData.steps[StepType.ORDERING_TESTS].correctTests;
         const caseTestsData = caseData.steps[StepType.ORDERING_TESTS].tests;
         
-        return correctTestIds.map(id => {
+        return correctTestIds.map((id: string) => {
           // First look in comprehensive database
           const comprehensiveTest = medicalTests.find(t => t.id === id);
           if (comprehensiveTest) {
@@ -125,7 +128,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ gameResult, caseData, onC
         const correctDiagnosisIds = caseData.steps[StepType.DIAGNOSIS].correctDiagnoses;
         const caseDiagnosisData = caseData.steps[StepType.DIAGNOSIS].options;
         
-        return correctDiagnosisIds.map(id => {
+        return correctDiagnosisIds.map((id: string) => {
           // Try comprehensive database first
           const comprehensiveDiagnosis = medicalDiagnoses.find(d => d.id === id);
           if (comprehensiveDiagnosis) {
@@ -145,7 +148,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ gameResult, caseData, onC
         const correctTreatmentIds = caseData.steps[StepType.TREATMENT].correctTreatments;
         const caseTreatmentData = caseData.steps[StepType.TREATMENT].treatments;
         
-        return correctTreatmentIds.map(id => {
+        return correctTreatmentIds.map((id: string) => {
           // Try comprehensive database first
           const comprehensiveTreatment = medicalTreatments.find(t => t.id === id);
           if (comprehensiveTreatment) {
@@ -166,10 +169,8 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ gameResult, caseData, onC
     }
   };
 
-
-
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white relative">
       <div className="max-w-6xl mx-auto p-8">
         {/* Header */}
         <div className="text-center mb-12">

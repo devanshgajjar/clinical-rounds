@@ -1,5 +1,5 @@
 import React from 'react';
-import { CaseData } from '../../data/cases';
+import { CaseData } from '../../types/game';
 import { StepType } from '../../types/game';
 import { playSound } from '../../utils/soundManager';
 
@@ -17,13 +17,13 @@ const HistorySummary: React.FC<HistorySummaryProps> = ({
   console.log('HistorySummary - Received selectedAnswers:', selectedAnswers);
   
   const historyData = caseData.steps[StepType.HISTORY_TAKING];
-  console.log('HistorySummary - Available questions:', historyData.questions.map(q => ({ id: q.id, text: q.text })));
+  console.log('HistorySummary - Available questions:', historyData.questions.map((q: any) => ({ id: q.id, text: q.text })));
   
   const selectedQuestions = historyData.questions.filter((q: any) => 
     selectedAnswers.includes(q.id)
   );
   
-  console.log('HistorySummary - Filtered selectedQuestions:', selectedQuestions.map(q => ({ id: q.id, text: q.text })));
+  console.log('HistorySummary - Filtered selectedQuestions:', selectedQuestions.map((q: any) => ({ id: q.id, text: q.text })));
 
   const getQuestionsByCategory = () => {
     const categories = ['Present Illness', 'Past Medical', 'Social', 'Family', 'Review of Systems'];

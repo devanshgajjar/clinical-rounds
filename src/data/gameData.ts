@@ -77,24 +77,24 @@ const historyQuestions = {
 // Common tests
 const commonTests = {
   cardiovascular: [
-    { id: 'cv_t1', name: 'ECG (Electrocardiogram)', category: TestCategory.VITALS, isRelevant: true },
-    { id: 'cv_t2', name: 'Chest X-Ray', category: TestCategory.IMAGING, isRelevant: true },
-    { id: 'cv_t3', name: 'Troponin I/T', category: TestCategory.LABS, isRelevant: true },
-    { id: 'cv_t4', name: 'Complete Blood Count', category: TestCategory.LABS, isRelevant: false },
-    { id: 'cv_t5', name: 'Echocardiogram', category: TestCategory.IMAGING, isRelevant: true },
-    { id: 'cv_t6', name: 'Lipid Panel', category: TestCategory.LABS, isRelevant: true },
-    { id: 'cv_t7', name: 'Bone Density Scan', category: TestCategory.IMAGING, isRelevant: false },
-    { id: 'cv_t8', name: 'Urine Culture', category: TestCategory.LABS, isRelevant: false }
+    { id: 'cv_t1', name: 'ECG (Electrocardiogram)', category: TestCategory.VITALS, necessary: true, cost: 50, synonyms: [], commonTerms: [] },
+    { id: 'cv_t2', name: 'Chest X-Ray', category: TestCategory.IMAGING, necessary: true, cost: 100, synonyms: [], commonTerms: [] },
+    { id: 'cv_t3', name: 'Troponin I/T', category: TestCategory.LABS, necessary: true, cost: 75, synonyms: [], commonTerms: [] },
+    { id: 'cv_t4', name: 'Complete Blood Count', category: TestCategory.LABS, necessary: false, cost: 25, synonyms: [], commonTerms: [] },
+    { id: 'cv_t5', name: 'Echocardiogram', category: TestCategory.IMAGING, necessary: true, cost: 350, synonyms: [], commonTerms: [] },
+    { id: 'cv_t6', name: 'Lipid Panel', category: TestCategory.LABS, necessary: true, cost: 25, synonyms: [], commonTerms: [] },
+    { id: 'cv_t7', name: 'Bone Density Scan', category: TestCategory.IMAGING, necessary: false, cost: 200, synonyms: [], commonTerms: [] },
+    { id: 'cv_t8', name: 'Urine Culture', category: TestCategory.LABS, necessary: false, cost: 45, synonyms: [], commonTerms: [] }
   ],
   neurology: [
-    { id: 'neuro_t1', name: 'CT Head without contrast', category: TestCategory.IMAGING, isRelevant: true },
-    { id: 'neuro_t2', name: 'MRI Brain', category: TestCategory.IMAGING, isRelevant: true },
-    { id: 'neuro_t3', name: 'Blood Glucose', category: TestCategory.LABS, isRelevant: true },
-    { id: 'neuro_t4', name: 'EEG (Electroencephalogram)', category: TestCategory.VITALS, isRelevant: true },
-    { id: 'neuro_t5', name: 'Lumbar Puncture', category: TestCategory.LABS, isRelevant: false },
-    { id: 'neuro_t6', name: 'Chest X-Ray', category: TestCategory.IMAGING, isRelevant: false },
-    { id: 'neuro_t7', name: 'Neurological Examination', category: TestCategory.VITALS, isRelevant: true },
-    { id: 'neuro_t8', name: 'Stool Sample', category: TestCategory.LABS, isRelevant: false }
+    { id: 'neuro_t1', name: 'CT Head without contrast', category: TestCategory.IMAGING, necessary: true, cost: 400, synonyms: [], commonTerms: [] },
+    { id: 'neuro_t2', name: 'MRI Brain', category: TestCategory.IMAGING, necessary: true, cost: 800, synonyms: [], commonTerms: [] },
+    { id: 'neuro_t3', name: 'Blood Glucose', category: TestCategory.LABS, necessary: true, cost: 15, synonyms: [], commonTerms: [] },
+    { id: 'neuro_t4', name: 'EEG (Electroencephalogram)', category: TestCategory.VITALS, necessary: true, cost: 500, synonyms: [], commonTerms: [] },
+    { id: 'neuro_t5', name: 'Lumbar Puncture', category: TestCategory.LABS, necessary: false, cost: 200, synonyms: [], commonTerms: [] },
+    { id: 'neuro_t6', name: 'Chest X-Ray', category: TestCategory.IMAGING, necessary: false, cost: 100, synonyms: [], commonTerms: [] },
+    { id: 'neuro_t7', name: 'Neurological Examination', category: TestCategory.VITALS, necessary: true, cost: 0, synonyms: [], commonTerms: [] },
+    { id: 'neuro_t8', name: 'Stool Sample', category: TestCategory.LABS, necessary: false, cost: 35, synonyms: [], commonTerms: [] }
   ]
 };
 
@@ -153,11 +153,11 @@ const case1: Case = {
     },
     [StepType.DIAGNOSIS]: {
       diagnosisOptions: [
-        { id: 'd1', text: 'ST-Elevation Myocardial Infarction (STEMI)', isCorrect: true },
-        { id: 'd2', text: 'Non-ST Elevation Myocardial Infarction (NSTEMI)', isCorrect: false },
-        { id: 'd3', text: 'Unstable Angina', isCorrect: false },
-        { id: 'd4', text: 'Gastroesophageal Reflux Disease', isCorrect: false },
-        { id: 'd5', text: 'Musculoskeletal Chest Pain', isCorrect: false }
+        { id: 'd1', text: 'ST-Elevation Myocardial Infarction (STEMI)', isCorrect: true, diagnosis: 'ST-Elevation Myocardial Infarction (STEMI)', correct: true, name: 'ST-Elevation Myocardial Infarction (STEMI)', synonyms: [], commonTerms: [] },
+        { id: 'd2', text: 'Non-ST Elevation Myocardial Infarction (NSTEMI)', isCorrect: false, diagnosis: 'Non-ST Elevation Myocardial Infarction (NSTEMI)', correct: false, name: 'Non-ST Elevation Myocardial Infarction (NSTEMI)', synonyms: [], commonTerms: [] },
+        { id: 'd3', text: 'Unstable Angina', isCorrect: false, diagnosis: 'Unstable Angina', correct: false, name: 'Unstable Angina', synonyms: [], commonTerms: [] },
+        { id: 'd4', text: 'Gastroesophageal Reflux Disease', isCorrect: false, diagnosis: 'Gastroesophageal Reflux Disease', correct: false, name: 'Gastroesophageal Reflux Disease', synonyms: [], commonTerms: [] },
+        { id: 'd5', text: 'Musculoskeletal Chest Pain', isCorrect: false, diagnosis: 'Musculoskeletal Chest Pain', correct: false, name: 'Musculoskeletal Chest Pain', synonyms: [], commonTerms: [] }
       ],
       requiredSelections: 1
     },
@@ -264,11 +264,11 @@ const case2: Case = {
     },
     [StepType.DIAGNOSIS]: {
       diagnosisOptions: [
-        { id: 'sd1', text: 'Acute Ischemic Stroke', isCorrect: true },
-        { id: 'sd2', text: 'Hemorrhagic Stroke', isCorrect: false },
-        { id: 'sd3', text: 'Transient Ischemic Attack', isCorrect: false },
-        { id: 'sd4', text: 'Migraine with Aura', isCorrect: false },
-        { id: 'sd5', text: 'Seizure with Todd\'s Paralysis', isCorrect: false }
+        { id: 'sd1', text: 'Acute Ischemic Stroke', isCorrect: true, diagnosis: 'Acute Ischemic Stroke', correct: true, name: 'Acute Ischemic Stroke', synonyms: [], commonTerms: [] },
+        { id: 'sd2', text: 'Hemorrhagic Stroke', isCorrect: false, diagnosis: 'Hemorrhagic Stroke', correct: false, name: 'Hemorrhagic Stroke', synonyms: [], commonTerms: [] },
+        { id: 'sd3', text: 'Transient Ischemic Attack', isCorrect: false, diagnosis: 'Transient Ischemic Attack', correct: false, name: 'Transient Ischemic Attack', synonyms: [], commonTerms: [] },
+        { id: 'sd4', text: 'Migraine with Aura', isCorrect: false, diagnosis: 'Migraine with Aura', correct: false, name: 'Migraine with Aura', synonyms: [], commonTerms: [] },
+        { id: 'sd5', text: 'Seizure with Todd\'s Paralysis', isCorrect: false, diagnosis: 'Seizure with Todd\'s Paralysis', correct: false, name: 'Seizure with Todd\'s Paralysis', synonyms: [], commonTerms: [] }
       ],
       requiredSelections: 1
     },
@@ -375,9 +375,9 @@ const case3: Case = {
     },
     [StepType.DIAGNOSIS]: {
       diagnosisOptions: [
-        { id: 'h1', text: 'Essential Hypertension', isCorrect: true },
-        { id: 'h2', text: 'Secondary Hypertension', isCorrect: false },
-        { id: 'h3', text: 'White Coat Hypertension', isCorrect: false }
+        { id: 'h1', text: 'Essential Hypertension', isCorrect: true, diagnosis: 'Essential Hypertension', correct: true, name: 'Essential Hypertension', synonyms: [], commonTerms: [] },
+        { id: 'h2', text: 'Secondary Hypertension', isCorrect: false, diagnosis: 'Secondary Hypertension', correct: false, name: 'Secondary Hypertension', synonyms: [], commonTerms: [] },
+        { id: 'h3', text: 'White Coat Hypertension', isCorrect: false, diagnosis: 'White Coat Hypertension', correct: false, name: 'White Coat Hypertension', synonyms: [], commonTerms: [] }
       ],
       requiredSelections: 1
     },

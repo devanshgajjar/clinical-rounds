@@ -16,42 +16,60 @@ export enum StepType {
 }
 
 export enum TestCategory {
-  VITALS = 'vitals',
-  IMAGING = 'imaging',
-  LABS = 'labs'
+  BLOOD_WORK = 'BLOOD_WORK',
+  MICROBIOLOGY = 'MICROBIOLOGY',
+  SERIOLOGY = 'SERIOLOGY',
+  IMAGING = 'IMAGING',
+  CARDIAC = 'CARDIAC',
+  NEUROLOGICAL = 'NEUROLOGICAL',
+  HORMONES = 'HORMONES',
+  URINALYSIS = 'URINALYSIS',
+  VITALS = 'VITALS',
+  LABS = 'LABS',
+  MONITORING = 'MONITORING',
+  OTHER = 'OTHER'
 }
 
 export enum TreatmentCategory {
-  MEDICATIONS = 'medications',
-  PROCEDURES = 'procedures',
-  LIFESTYLE = 'lifestyle'
+  MEDICATIONS = 'Medication',
+  PROCEDURES = 'Procedure',
+  LIFESTYLE = 'Lifestyle',
+  FOLLOW_UP = 'Follow-up'
 }
 
 export interface Question {
   id: string;
   text: string;
   isRelevant: boolean;
+  category?: string;
 }
 
 export interface Test {
   id: string;
   name: string;
   category: TestCategory;
-  isRelevant: boolean;
-  cost?: number;
+  cost: number;
+  necessary: boolean;
+  synonyms: string[];
+  commonTerms: string[];
+  contraindicated?: boolean;
 }
 
 export interface DiagnosisOption {
   id: string;
   text: string;
+  diagnosis: string;
+  correct: boolean;
   isCorrect: boolean;
-  isMultiSelect?: boolean;
+  name: string;
+  synonyms: string[];
+  commonTerms: string[];
 }
 
 export interface TreatmentOption {
   id: string;
   text: string;
-  category: TreatmentCategory;
+  category: string;
   isCorrect: boolean;
   isSafe: boolean;
 }
@@ -302,4 +320,79 @@ export interface SavedGameState {
   progress: GameProgress;
   timestamp: Date;
   version: string;
+}
+
+export interface MedicalTerm {
+  id: string;
+  name: string;
+  synonyms: string[];
+  commonTerms: string[];
+  description?: string;
+}
+
+export interface Treatment extends MedicalTerm {
+  category: 'Medication' | 'Procedure' | 'Lifestyle' | 'Follow-up';
+  necessary: boolean;
+  contraindicated?: boolean;
+  dosage?: string;
+}
+
+export interface CaseData {
+  id: string;
+  title: string;
+  shortDescription?: string;
+  avatar?: string;
+  xpReward?: number;
+  stars?: number;
+  unlocked?: boolean;
+  system: string;
+  difficulty: string;
+  patient: {
+    name: string;
+    age: number;
+    gender: string;
+    chiefComplaint: string;
+    background?: string;
+  };
+  steps: {
+    [StepType.HISTORY_TAKING]: {
+      questions: Question[];
+      correctAnswers: string[];
+      minimumRequired: number;
+    };
+    [StepType.ORDERING_TESTS]: {
+      tests: Test[];
+      correctTests: string[];
+      maxAllowed: number;
+    };
+    [StepType.DIAGNOSIS]: {
+      type: 'multiple-choice';
+      options: DiagnosisOption[];
+      correctDiagnoses: string[];
+    };
+    [StepType.TREATMENT]: {
+      treatments: Treatment[];
+      correctTreatments: string[];
+      maxAllowed: number;
+    };
+  };
+  reactions: {
+    patient: {
+      excellent: string;
+      good: string;
+      poor: string;
+      failed: string;
+    };
+    mentor: {
+      excellent: string;
+      good: string;
+      poor: string;
+      failed: string;
+    };
+  };
+  isEmergency: boolean;
+  scoring?: {
+    baseXP: number;
+    optimalOrder: StepType[];
+  };
 } 

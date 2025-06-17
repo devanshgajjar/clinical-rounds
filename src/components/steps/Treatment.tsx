@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { CaseData } from '../../data/cases';
+import { CaseData } from '../../types/game';
 import { StepType } from '../../types/game';
 import { 
   medicalTreatments, 
@@ -41,7 +41,7 @@ const Treatment: React.FC<TreatmentProps> = ({
 
   // Get unique categories from filtered treatments
   const availableCategories = useMemo(() => {
-    const categorySet = new Set(filteredTreatments.map(treatment => treatment.category));
+    const categorySet = new Set(filteredTreatments.map((treatment: any) => treatment.category));
     const categories = Array.from(categorySet).sort();
     return categories;
   }, [filteredTreatments]);
@@ -50,7 +50,7 @@ const Treatment: React.FC<TreatmentProps> = ({
     setSelectedTreatments(prev => {
       if (prev.includes(treatmentId)) {
         playSound.selectionRemoved();
-        return prev.filter(id => id !== treatmentId);
+        return prev.filter((id: any) => id !== treatmentId);
       } else {
         playSound.selectionMade();
         return [...prev, treatmentId];
@@ -72,7 +72,7 @@ const Treatment: React.FC<TreatmentProps> = ({
   };
 
   const getTreatmentsByCategory = (category: string): MedicalTreatment[] => {
-    return filteredTreatments.filter(treatment => treatment.category === category);
+    return filteredTreatments.filter((treatment: any) => treatment.category === category);
   };
 
   // Check if treatment is from original case data
@@ -147,7 +147,7 @@ const Treatment: React.FC<TreatmentProps> = ({
               <div className="text-gray-500">No treatments found.</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filteredTreatments.map((treatment) => {
+                {filteredTreatments.map((treatment: any) => {
                   const isSelected = selectedTreatments.includes(treatment.id);
                   const isDisabled = !isSelected && selectedTreatments.length >= maxAllowed;
                   const isOriginal = isOriginalTreatment(treatment.id);
@@ -159,10 +159,7 @@ const Treatment: React.FC<TreatmentProps> = ({
                       className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                         isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
                       } ${
-                        isContraindicated ? 'border-red-300 bg-red-50' :
-                        isNecessary ? 'border-green-300 bg-green-50' :
-                        isOriginal ? 'border-blue-300 bg-blue-50' :
-                        'border-gray-200'
+                        isSelected ? 'border-blue-300 bg-blue-50' : 'border-gray-200'
                       }`}
                     >
                       <input
@@ -173,14 +170,8 @@ const Treatment: React.FC<TreatmentProps> = ({
                         className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                       <div className="flex-1 min-w-0">
-                        <span className={`text-sm font-medium ${
-                          isContraindicated ? 'text-red-900' :
-                          isNecessary ? 'text-green-900' :
-                          'text-gray-900'
-                        }`}>
+                        <span className="text-sm font-medium text-gray-900">
                           {treatment.name}
-                          {isNecessary && <span className="text-green-600 ml-1">✓</span>}
-                          {isContraindicated && <span className="text-red-600 ml-1">⚠️</span>}
                         </span>
                         <div className="text-xs text-gray-500 mt-1">
                           {treatment.dosage && `Dosage: ${treatment.dosage}`}

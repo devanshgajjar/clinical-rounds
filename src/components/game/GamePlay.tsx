@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StepType } from '../../types/game';
-import { CaseData, casesData } from '../../data/cases';
+import { casesData } from '../../data/cases';
+import { CaseData } from '../../types/game';
 import { ScoringSystem, StepResult } from '../../logic/scoringSystem';
 
 import HistoryTaking from '../steps/HistoryTaking';
@@ -130,10 +131,10 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
                name: t.name,
                category: t.category,
                cost: 100,
-               necessary: t.isRelevant,
-               contraindicated: false
+               necessary: t.necessary,
+               contraindicated: t.contraindicated || false
              })) || [],
-             correctTests: contextCase.steps[StepType.ORDERING_TESTS].tests?.filter((t: any) => t.isRelevant).map((t: any) => t.id) || [],
+             correctTests: contextCase.steps[StepType.ORDERING_TESTS].tests?.filter((t: any) => t.necessary).map((t: any) => t.id) || [],
              maxAllowed: contextCase.steps[StepType.ORDERING_TESTS].maxSelections || 5
            },
            [StepType.DIAGNOSIS]: {
@@ -255,8 +256,8 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
         gameResult={gameResult}
         caseData={caseData}
         onContinue={() => {
-          // Return to dashboard
           dispatch({ type: 'BACK_TO_CASE_SELECTION' });
+          setShowResults(false);
           // Clear URL parameter if it exists
           const url = new URL(window.location.href);
           if (url.searchParams.has('case')) {
@@ -421,7 +422,10 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
 
     switch (currentStep) {
       case StepType.HISTORY_TAKING:
-        return <HistoryTaking {...commonProps} />;
+        return <HistoryTaking {...commonProps} onClose={() => {
+          dispatch({ type: 'BACK_TO_CASE_SELECTION' });
+          // Optionally reset other state if needed
+        }} />;
       case StepType.ORDERING_TESTS:
         return <OrderingTests {...commonProps} />;
       case StepType.DIAGNOSIS:
@@ -459,39 +463,12 @@ const GamePlay: React.FC<GamePlayProps> = ({ caseId }) => {
         {/* Header with Close Button and Navigation */}
         <div className="border-b border-gray-200 bg-white">
           <div className="flex items-center justify-between p-4">
-            {/* Close Button */}
-            <button 
-              onClick={() => {
-                playSound.pageTransition();
-                
-                // Clear URL parameter and force navigation to home
-                const url = new URL(window.location.href);
-                if (url.searchParams.has('case')) {
-                  url.searchParams.delete('case');
-                  window.history.replaceState({}, '', url.toString());
-                  
-                  // Force page reload to reset all state
-                  window.location.reload();
-                } else {
-                  // Use proper navigation to case selection
-                  dispatch({ type: 'BACK_TO_CASE_SELECTION' });
-                }
-              }}
-              onMouseEnter={() => playSound.buttonHover()}
-              className="text-gray-600 hover:text-gray-900 text-2xl"
-              title="Back to Cases"
-            >
-              ✕
-            </button>
-
             {/* Case Title */}
             <div className="text-lg font-medium text-gray-900">
               {currentView === 'history-summary' && '📋 History Summary'}
               {currentView === 'test-summary' && '🧪 Test Results'}
               {currentView === 'step' && (caseData?.title || 'Loading...')}
             </div>
-
-            <div className="w-8"></div> {/* Spacer for balance */}
           </div>
           
           {/* XP Multiplier Display - only show during regular steps */}

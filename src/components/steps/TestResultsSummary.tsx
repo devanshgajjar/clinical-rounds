@@ -1,5 +1,5 @@
 import React from 'react';
-import { CaseData } from '../../data/cases';
+import { CaseData } from '../../types/game';
 import { StepType } from '../../types/game';
 import { medicalTests } from '../../data/medicalOptions';
 import { playSound } from '../../utils/soundManager';
@@ -18,9 +18,9 @@ const TestResultsSummary: React.FC<TestResultsSummaryProps> = ({
   const testsData = caseData.steps[StepType.ORDERING_TESTS];
   
   // Get ordered tests from the comprehensive medical database
-  const orderedTests = medicalTests.filter(test => 
+  const orderedTests = medicalTests.filter((test: any) => 
     selectedTests.includes(test.id)
-  ).map(test => {
+  ).map((test: any) => {
     // Check if this test is in the original case data to determine if it's necessary
     const originalTest = testsData.tests?.find((t: any) => t.id === test.id);
     return {

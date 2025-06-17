@@ -1,9 +1,14 @@
+import { TestCategory } from '../types/game';
+
 export interface MedicalTest {
   id: string;
   name: string;
-  category: string;
+  category: TestCategory;
   cost: number;
   description?: string;
+  necessary?: boolean;
+  synonyms?: string[];
+  commonTerms?: string[];
 }
 
 export interface MedicalDiagnosis {
@@ -12,6 +17,9 @@ export interface MedicalDiagnosis {
   category: string;
   icd10?: string;
   description?: string;
+  correct?: boolean;
+  synonyms?: string[];
+  commonTerms?: string[];
 }
 
 export interface MedicalTreatment {
@@ -20,161 +28,174 @@ export interface MedicalTreatment {
   category: string;
   description?: string;
   dosage?: string;
+  synonyms?: string[];
+  commonTerms?: string[];
 }
 
 // Comprehensive Test Database
 export const medicalTests: MedicalTest[] = [
-  // Blood Work - Core Tests
-  { id: 'cbc', name: 'Complete Blood Count (CBC)', category: 'Blood Work', cost: 25 },
-  { id: 'bmp', name: 'Basic Metabolic Panel', category: 'Blood Work', cost: 30 },
-  { id: 'cmp', name: 'Comprehensive Metabolic Panel', category: 'Blood Work', cost: 45 },
-  { id: 'liver-func', name: 'Liver Function Tests', category: 'Blood Work', cost: 35 },
-  { id: 'lipid-panel', name: 'Lipid Panel', category: 'Blood Work', cost: 25 },
-  { id: 'thyroid-func', name: 'Thyroid Function Tests (TSH, T3, T4)', category: 'Blood Work', cost: 40 },
-  { id: 'hba1c', name: 'Hemoglobin A1c', category: 'Blood Work', cost: 30 },
-  { id: 'glucose', name: 'Blood Glucose', category: 'Blood Work', cost: 15 },
-  { id: 'pt-inr', name: 'Prothrombin Time (PT/INR)', category: 'Blood Work', cost: 20 },
-  { id: 'ptt', name: 'Partial Thromboplastin Time (PTT)', category: 'Blood Work', cost: 20 },
-  { id: 'esr', name: 'Erythrocyte Sedimentation Rate (ESR)', category: 'Blood Work', cost: 15 },
-  { id: 'crp', name: 'C-Reactive Protein (CRP)', category: 'Blood Work', cost: 25 },
-  { id: 'procalcitonin', name: 'Procalcitonin', category: 'Blood Work', cost: 45 },
-  { id: 'lactate', name: 'Serum Lactate', category: 'Blood Work', cost: 20 },
-  { id: 'arterial-blood-gas', name: 'Arterial Blood Gas (ABG)', category: 'Blood Work', cost: 80 },
-  { id: 'venous-blood-gas', name: 'Venous Blood Gas (VBG)', category: 'Blood Work', cost: 60 },
-  
-  // Blood Work - Specialized
-  { id: 'iron-studies', name: 'Iron Studies (Ferritin, TIBC, Iron)', category: 'Blood Work', cost: 40 },
-  { id: 'b12-folate', name: 'Vitamin B12 and Folate', category: 'Blood Work', cost: 35 },
-  { id: 'vitamin-d', name: 'Vitamin D (25-OH)', category: 'Blood Work', cost: 35 },
-  { id: 'magnesium', name: 'Serum Magnesium', category: 'Blood Work', cost: 20 },
-  { id: 'phosphorus', name: 'Serum Phosphorus', category: 'Blood Work', cost: 20 },
-  { id: 'albumin', name: 'Serum Albumin', category: 'Blood Work', cost: 15 },
-  { id: 'total-protein', name: 'Total Protein', category: 'Blood Work', cost: 15 },
-  { id: 'bilirubin', name: 'Total and Direct Bilirubin', category: 'Blood Work', cost: 25 },
-  { id: 'ammonia', name: 'Serum Ammonia', category: 'Blood Work', cost: 30 },
-  { id: 'lactic-dehydrogenase', name: 'Lactate Dehydrogenase (LDH)', category: 'Blood Work', cost: 25 },
+  // Blood Work
+  { id: 'cbc', name: 'Complete Blood Count (CBC)', category: TestCategory.BLOOD_WORK, cost: 25, necessary: true, synonyms: ['CBC', 'Blood count', 'Hemogram'], commonTerms: ['blood test', 'blood work', 'check blood levels'] },
+  { id: 'bmp', name: 'Basic Metabolic Panel', category: TestCategory.BLOOD_WORK, cost: 30 },
+  { id: 'cmp', name: 'Comprehensive Metabolic Panel', category: TestCategory.BLOOD_WORK, cost: 45, necessary: false, synonyms: ['CMP', 'Chemistry panel', 'Metabolic panel'], commonTerms: ['blood chemistry', 'electrolytes', 'liver function'] },
+  { id: 'liver-func', name: 'Liver Function Tests', category: TestCategory.BLOOD_WORK, cost: 35 },
+  { id: 'lipid-panel', name: 'Lipid Panel', category: TestCategory.BLOOD_WORK, cost: 25 },
+  { id: 'thyroid-func', name: 'Thyroid Function Tests (TSH, T3, T4)', category: TestCategory.BLOOD_WORK, cost: 40 },
+  { id: 'hba1c', name: 'Hemoglobin A1c', category: TestCategory.BLOOD_WORK, cost: 30 },
+  { id: 'glucose', name: 'Blood Glucose', category: TestCategory.BLOOD_WORK, cost: 15 },
+  { id: 'pt-inr', name: 'Prothrombin Time (PT/INR)', category: TestCategory.BLOOD_WORK, cost: 20 },
+  { id: 'ptt', name: 'Partial Thromboplastin Time (PTT)', category: TestCategory.BLOOD_WORK, cost: 20 },
+  { id: 'esr', name: 'Erythrocyte Sedimentation Rate (ESR)', category: TestCategory.BLOOD_WORK, cost: 15 },
+  { id: 'crp', name: 'C-Reactive Protein (CRP)', category: TestCategory.BLOOD_WORK, cost: 25 },
+  { id: 'procalcitonin', name: 'Procalcitonin', category: TestCategory.BLOOD_WORK, cost: 45 },
+  { id: 'lactate', name: 'Serum Lactate', category: TestCategory.BLOOD_WORK, cost: 20 },
+  { id: 'arterial-blood-gas', name: 'Arterial Blood Gas (ABG)', category: TestCategory.BLOOD_WORK, cost: 80 },
+  { id: 'venous-blood-gas', name: 'Venous Blood Gas (VBG)', category: TestCategory.BLOOD_WORK, cost: 60 },
+  { id: 'iron-studies', name: 'Iron Studies (Ferritin, TIBC, Iron)', category: TestCategory.BLOOD_WORK, cost: 40 },
+  { id: 'vitamin-d', name: 'Vitamin D Level', category: TestCategory.BLOOD_WORK, cost: 45 },
+  { id: 'vitamin-b12', name: 'Vitamin B12 Level', category: TestCategory.BLOOD_WORK, cost: 35 },
+  { id: 'folate', name: 'Folate Level', category: TestCategory.BLOOD_WORK, cost: 35 },
+  { id: 'magnesium', name: 'Magnesium Level', category: TestCategory.BLOOD_WORK, cost: 25 },
+  { id: 'calcium', name: 'Calcium Level', category: TestCategory.BLOOD_WORK, cost: 25 },
+  { id: 'phosphorus', name: 'Phosphorus Level', category: TestCategory.BLOOD_WORK, cost: 25 },
+  { id: 'uric-acid', name: 'Uric Acid Level', category: TestCategory.BLOOD_WORK, cost: 25 },
+  { id: 'coagulation-panel', name: 'Coagulation Panel (PT, PTT, INR)', category: TestCategory.BLOOD_WORK, cost: 45 },
+  { id: 'd-dimer', name: 'D-dimer', category: TestCategory.BLOOD_WORK, cost: 35 },
+  { id: 'fibrinogen', name: 'Fibrinogen Level', category: TestCategory.BLOOD_WORK, cost: 40 },
+  { id: 'protein-c', name: 'Protein C Activity', category: TestCategory.BLOOD_WORK, cost: 60 },
+  { id: 'protein-s', name: 'Protein S Activity', category: TestCategory.BLOOD_WORK, cost: 60 },
+  { id: 'antithrombin', name: 'Antithrombin III', category: TestCategory.BLOOD_WORK, cost: 55 },
+  { id: 'factor-v-leiden', name: 'Factor V Leiden', category: TestCategory.BLOOD_WORK, cost: 70 },
+  { id: 'prothrombin-g20210a', name: 'Prothrombin G20210A', category: TestCategory.BLOOD_WORK, cost: 70 },
+  { id: 'homocysteine', name: 'Homocysteine Level', category: TestCategory.BLOOD_WORK, cost: 45 },
+  { id: 'cardiac-enzymes', name: 'Cardiac Enzymes (Troponin, CK-MB)', category: TestCategory.BLOOD_WORK, cost: 50 },
+  { id: 'bnp', name: 'Brain Natriuretic Peptide (BNP)', category: TestCategory.BLOOD_WORK, cost: 45 },
+  { id: 'nt-probnp', name: 'NT-proBNP', category: TestCategory.BLOOD_WORK, cost: 45 },
+  { id: 'cardiac-markers', name: 'Cardiac Markers Panel', category: TestCategory.BLOOD_WORK, cost: 60 },
+  { id: 'lipid-fractionation', name: 'Lipid Fractionation', category: TestCategory.BLOOD_WORK, cost: 55 },
+  { id: 'apolipoprotein', name: 'Apolipoprotein A1 and B', category: TestCategory.BLOOD_WORK, cost: 65 },
+  { id: 'lipoprotein-a', name: 'Lipoprotein (a)', category: TestCategory.BLOOD_WORK, cost: 50 },
   
   // Cardiac Tests
-  { id: 'ecg', name: 'Electrocardiogram (ECG/EKG)', category: 'Cardiac', cost: 50 },
-  { id: 'echocardiogram', name: 'Echocardiogram', category: 'Cardiac', cost: 200 },
-  { id: 'stress-test', name: 'Exercise Stress Test', category: 'Cardiac', cost: 300 },
-  { id: 'holter', name: 'Holter Monitor (24-hour)', category: 'Cardiac', cost: 150 },
-  { id: 'event-monitor', name: 'Event Monitor', category: 'Cardiac', cost: 200 },
-  { id: 'treadmill-stress', name: 'Treadmill Stress Test', category: 'Cardiac', cost: 280 },
-  { id: 'nuclear-stress', name: 'Nuclear Stress Test', category: 'Cardiac', cost: 600 },
-  { id: 'cardiac-cath', name: 'Cardiac Catheterization', category: 'Cardiac', cost: 1000 },
-  { id: 'troponin', name: 'Troponin I/T', category: 'Cardiac', cost: 40 },
-  { id: 'ck-mb', name: 'Creatine Kinase-MB (CK-MB)', category: 'Cardiac', cost: 35 },
-  { id: 'bnp', name: 'B-type Natriuretic Peptide (BNP)', category: 'Cardiac', cost: 50 },
-  { id: 'nt-probnp', name: 'NT-proBNP', category: 'Cardiac', cost: 55 },
-  { id: 'd-dimer', name: 'D-Dimer', category: 'Cardiac', cost: 30 },
+  { id: 'ecg', name: 'Electrocardiogram (ECG/EKG)', category: TestCategory.CARDIAC, cost: 50 },
+  { id: 'echo', name: 'Echocardiogram', category: TestCategory.CARDIAC, cost: 350 },
+  { id: 'stress-test', name: 'Exercise Stress Test', category: TestCategory.CARDIAC, cost: 400 },
+  { id: 'holter', name: 'Holter Monitor (24-48hr)', category: TestCategory.CARDIAC, cost: 200 },
+  { id: 'event-monitor', name: 'Event Monitor', category: TestCategory.CARDIAC, cost: 300 },
+  { id: 'cardiac-mri', name: 'Cardiac MRI', category: TestCategory.CARDIAC, cost: 1200 },
+  { id: 'cardiac-ct', name: 'Cardiac CT', category: TestCategory.CARDIAC, cost: 800 },
+  { id: 'coronary-angiogram', name: 'Coronary Angiogram', category: TestCategory.CARDIAC, cost: 1500 },
+  { id: 'tilt-table', name: 'Tilt Table Test', category: TestCategory.CARDIAC, cost: 600 },
+  { id: 'electrophysiology', name: 'Electrophysiology Study', category: TestCategory.CARDIAC, cost: 2000 },
   
   // Imaging - X-rays
-  { id: 'chest-xray', name: 'Chest X-ray', category: 'Imaging', cost: 80 },
-  { id: 'abdominal-xray', name: 'Abdominal X-ray', category: 'Imaging', cost: 90 },
-  { id: 'hand-xray', name: 'X-ray Hand', category: 'Imaging', cost: 120 },
-  { id: 'ankle-xray', name: 'Ankle X-ray (3 views)', category: 'Imaging', cost: 120 },
-  { id: 'foot-xray', name: 'Foot X-ray', category: 'Imaging', cost: 100 },
-  { id: 'knee-xray', name: 'X-ray Knee', category: 'Imaging', cost: 100 },
-  { id: 'spine-xray', name: 'X-ray Spine', category: 'Imaging', cost: 110 },
-  { id: 'pelvis-xray', name: 'X-ray Pelvis', category: 'Imaging', cost: 95 },
-  { id: 'shoulder-xray', name: 'X-ray Shoulder', category: 'Imaging', cost: 105 },
+  { id: 'chest-xray', name: 'Chest X-ray', category: TestCategory.IMAGING, cost: 80 },
+  { id: 'abdominal-xray', name: 'Abdominal X-ray', category: TestCategory.IMAGING, cost: 80 },
+  { id: 'hand-xray', name: 'X-ray Hand', category: TestCategory.IMAGING, cost: 120 },
+  { id: 'ankle-xray', name: 'Ankle X-ray (3 views)', category: TestCategory.IMAGING, cost: 120 },
+  { id: 'foot-xray', name: 'Foot X-ray', category: TestCategory.IMAGING, cost: 100 },
+  { id: 'knee-xray', name: 'X-ray Knee', category: TestCategory.IMAGING, cost: 100 },
+  { id: 'spine-xray', name: 'X-ray Spine', category: TestCategory.IMAGING, cost: 110 },
+  { id: 'pelvis-xray', name: 'X-ray Pelvis', category: TestCategory.IMAGING, cost: 95 },
+  { id: 'shoulder-xray', name: 'X-ray Shoulder', category: TestCategory.IMAGING, cost: 105 },
   
   // Imaging - CT Scans
-  { id: 'ct-head', name: 'CT Head (Non-contrast)', category: 'Imaging', cost: 400 },
-  { id: 'ct-head-contrast', name: 'CT Head with Contrast', category: 'Imaging', cost: 500 },
-  { id: 'ct-chest', name: 'CT Chest', category: 'Imaging', cost: 450 },
-  { id: 'ct-abdomen', name: 'CT Abdomen/Pelvis', category: 'Imaging', cost: 500 },
-  { id: 'ct-angiogram', name: 'CT Angiogram Head/Neck', category: 'Imaging', cost: 800 },
-  { id: 'ct-pe', name: 'CT Pulmonary Embolism Protocol', category: 'Imaging', cost: 600 },
-  { id: 'ct-coronary', name: 'CT Coronary Angiogram', category: 'Imaging', cost: 750 },
-  { id: 'ct-ankle', name: 'CT Ankle', category: 'Imaging', cost: 400 },
+  { id: 'ct-head', name: 'CT Head', category: TestCategory.IMAGING, cost: 400 },
+  { id: 'ct-head-contrast', name: 'CT Head with Contrast', category: TestCategory.IMAGING, cost: 500 },
+  { id: 'ct-chest', name: 'CT Chest', category: TestCategory.IMAGING, cost: 450 },
+  { id: 'ct-abdomen', name: 'CT Abdomen/Pelvis', category: TestCategory.IMAGING, cost: 500 },
+  { id: 'ct-angiogram', name: 'CT Angiogram Head/Neck', category: TestCategory.IMAGING, cost: 800 },
+  { id: 'ct-pe', name: 'CT Pulmonary Embolism Protocol', category: TestCategory.IMAGING, cost: 600 },
+  { id: 'ct-coronary', name: 'CT Coronary Angiogram', category: TestCategory.IMAGING, cost: 750 },
+  { id: 'ct-ankle', name: 'CT Ankle', category: TestCategory.IMAGING, cost: 400 },
   
   // Imaging - MRI
-  { id: 'mri-brain', name: 'MRI Brain', category: 'Imaging', cost: 800 },
-  { id: 'mri-spine', name: 'MRI Spine', category: 'Imaging', cost: 900 },
-  { id: 'mri-knee', name: 'MRI Knee', category: 'Imaging', cost: 700 },
-  { id: 'mri-shoulder', name: 'MRI Shoulder', category: 'Imaging', cost: 750 },
-  { id: 'mri-cardiac', name: 'Cardiac MRI', category: 'Imaging', cost: 1200 },
-  { id: 'mri-ankle', name: 'Ankle MRI', category: 'Imaging', cost: 800 },
+  { id: 'mri-brain', name: 'MRI Brain', category: TestCategory.IMAGING, cost: 800 },
+  { id: 'mri-spine', name: 'MRI Spine', category: TestCategory.IMAGING, cost: 900 },
+  { id: 'mri-knee', name: 'MRI Knee', category: TestCategory.IMAGING, cost: 700 },
+  { id: 'mri-shoulder', name: 'MRI Shoulder', category: TestCategory.IMAGING, cost: 750 },
+  { id: 'mri-cardiac', name: 'Cardiac MRI', category: TestCategory.IMAGING, cost: 1200 },
+  { id: 'mri-ankle', name: 'Ankle MRI', category: TestCategory.IMAGING, cost: 800 },
   
   // Imaging - Ultrasound
-  { id: 'echo-us', name: 'Echocardiogram (Ultrasound)', category: 'Imaging', cost: 200 },
-  { id: 'abdominal-us', name: 'Abdominal Ultrasound', category: 'Imaging', cost: 200 },
-  { id: 'pelvic-us', name: 'Pelvic Ultrasound', category: 'Imaging', cost: 180 },
-  { id: 'thyroid-us', name: 'Thyroid Ultrasound', category: 'Imaging', cost: 160 },
-  { id: 'carotid-us', name: 'Carotid Ultrasound', category: 'Imaging', cost: 220 },
-  { id: 'renal-us', name: 'Renal Ultrasound', category: 'Imaging', cost: 190 },
-  { id: 'ankle-us', name: 'Ankle Ultrasound', category: 'Imaging', cost: 200 },
+  { id: 'echo-us', name: 'Echocardiogram (Ultrasound)', category: TestCategory.IMAGING, cost: 200 },
+  { id: 'abdominal-us', name: 'Abdominal Ultrasound', category: TestCategory.IMAGING, cost: 200 },
+  { id: 'pelvic-us', name: 'Pelvic Ultrasound', category: TestCategory.IMAGING, cost: 180 },
+  { id: 'thyroid-us', name: 'Thyroid Ultrasound', category: TestCategory.IMAGING, cost: 160 },
+  { id: 'carotid-us', name: 'Carotid Ultrasound', category: TestCategory.IMAGING, cost: 220 },
+  { id: 'renal-us', name: 'Renal Ultrasound', category: TestCategory.IMAGING, cost: 190 },
+  { id: 'ankle-us', name: 'Ankle Ultrasound', category: TestCategory.IMAGING, cost: 200 },
   
   // Microbiology
-  { id: 'blood-culture', name: 'Blood Culture', category: 'Microbiology', cost: 60 },
-  { id: 'urine-culture', name: 'Urine Culture', category: 'Microbiology', cost: 40 },
-  { id: 'sputum-culture', name: 'Sputum Culture', category: 'Microbiology', cost: 50 },
-  { id: 'wound-culture', name: 'Wound Culture', category: 'Microbiology', cost: 45 },
-  { id: 'stool-culture', name: 'Stool Culture', category: 'Microbiology', cost: 50 },
-  { id: 'throat-culture', name: 'Throat Culture', category: 'Microbiology', cost: 35 },
-  { id: 'csf-culture', name: 'CSF Culture', category: 'Microbiology', cost: 80 },
-  { id: 'fungal-culture', name: 'Fungal Culture', category: 'Microbiology', cost: 70 },
-  { id: 'acid-fast', name: 'Acid-Fast Bacilli (AFB)', category: 'Microbiology', cost: 45 },
-  { id: 'c-diff', name: 'C. difficile Toxin', category: 'Microbiology', cost: 55 },
+  { id: 'blood-culture', name: 'Blood Culture', category: TestCategory.MICROBIOLOGY, cost: 45 },
+  { id: 'urine-culture', name: 'Urine Culture', category: TestCategory.MICROBIOLOGY, cost: 35 },
+  { id: 'sputum-culture', name: 'Sputum Culture', category: TestCategory.MICROBIOLOGY, cost: 40 },
+  { id: 'wound-culture', name: 'Wound Culture', category: TestCategory.MICROBIOLOGY, cost: 45 },
+  { id: 'stool-culture', name: 'Stool Culture', category: TestCategory.MICROBIOLOGY, cost: 40 },
+  { id: 'throat-culture', name: 'Throat Culture', category: TestCategory.MICROBIOLOGY, cost: 35 },
+  { id: 'csf-culture', name: 'CSF Culture', category: TestCategory.MICROBIOLOGY, cost: 80 },
+  { id: 'fungal-culture', name: 'Fungal Culture', category: TestCategory.MICROBIOLOGY, cost: 70 },
+  { id: 'acid-fast', name: 'Acid-Fast Bacilli (AFB)', category: TestCategory.MICROBIOLOGY, cost: 45 },
+  { id: 'c-diff', name: 'C. difficile Toxin', category: TestCategory.MICROBIOLOGY, cost: 55 },
   
-  // Serology/Immunology
-  { id: 'hepatitis-panel', name: 'Hepatitis Panel (A, B, C)', category: 'Serology', cost: 75 },
-  { id: 'hiv-ab', name: 'HIV Antibody Test', category: 'Serology', cost: 40 },
-  { id: 'syphilis-screen', name: 'Syphilis Screening (RPR/VDRL)', category: 'Serology', cost: 30 },
-  { id: 'rheumatoid-factor', name: 'Rheumatoid Factor (RF)', category: 'Serology', cost: 35 },
-  { id: 'ana', name: 'Antinuclear Antibody (ANA)', category: 'Serology', cost: 45 },
-  { id: 'anti-dsdna', name: 'Anti-dsDNA', category: 'Serology', cost: 50 },
-  { id: 'complement', name: 'Complement C3/C4', category: 'Serology', cost: 50 },
-  { id: 'anti-ccp', name: 'Anti-CCP Antibodies', category: 'Serology', cost: 60 },
-  { id: 'tetanus-ab', name: 'Tetanus Antibody', category: 'Serology', cost: 30 },
-  { id: 'rabies-ab', name: 'Rabies Antibody', category: 'Serology', cost: 60 },
-  { id: 'influenza-ag', name: 'Influenza Antigen', category: 'Serology', cost: 40 },
-  { id: 'strep-ag', name: 'Strep A Antigen', category: 'Serology', cost: 25 },
+  // Serology Tests
+  { id: 'hiv', name: 'HIV Antibody Test', category: TestCategory.SERIOLOGY, cost: 40 },
+  { id: 'hepatitis-b', name: 'Hepatitis B Panel', category: TestCategory.SERIOLOGY, cost: 45 },
+  { id: 'hepatitis-c', name: 'Hepatitis C Antibody', category: TestCategory.SERIOLOGY, cost: 45 },
+  { id: 'syphilis', name: 'Syphilis Test (RPR/VDRL)', category: TestCategory.SERIOLOGY, cost: 30 },
+  { id: 'rheumatoid-factor', name: 'Rheumatoid Factor', category: TestCategory.SERIOLOGY, cost: 35 },
+  { id: 'ana', name: 'Antinuclear Antibody (ANA)', category: TestCategory.SERIOLOGY, cost: 45 },
+  { id: 'anti-dsdna', name: 'Anti-dsDNA', category: TestCategory.SERIOLOGY, cost: 50 },
+  { id: 'complement', name: 'Complement C3/C4', category: TestCategory.SERIOLOGY, cost: 50 },
+  { id: 'anti-ccp', name: 'Anti-CCP Antibodies', category: TestCategory.SERIOLOGY, cost: 60 },
+  { id: 'tetanus-ab', name: 'Tetanus Antibody', category: TestCategory.SERIOLOGY, cost: 30 },
+  { id: 'rabies-ab', name: 'Rabies Antibody', category: TestCategory.SERIOLOGY, cost: 60 },
+  { id: 'influenza-ag', name: 'Influenza Antigen', category: TestCategory.SERIOLOGY, cost: 40 },
+  { id: 'strep-ag', name: 'Strep A Antigen', category: TestCategory.SERIOLOGY, cost: 25 },
   
   // Neurological Tests
-  { id: 'lumbar-puncture', name: 'Lumbar Puncture (Spinal Tap)', category: 'Neurological', cost: 200 },
-  { id: 'eeg', name: 'Electroencephalogram (EEG)', category: 'Neurological', cost: 150 },
-  { id: 'emg', name: 'Electromyography (EMG)', category: 'Neurological', cost: 180 },
-  { id: 'nerve-conduction', name: 'Nerve Conduction Study', category: 'Neurological', cost: 160 },
-  { id: 'neuro-exam', name: 'Detailed Neurological Examination', category: 'Neurological', cost: 50 },
-  { id: 'neurovascular-assessment', name: 'Neurovascular Assessment', category: 'Neurological', cost: 0 },
+  { id: 'lumbar-puncture', name: 'Lumbar Puncture (Spinal Tap)', category: TestCategory.NEUROLOGICAL, cost: 200 },
+  { id: 'eeg', name: 'Electroencephalogram (EEG)', category: TestCategory.NEUROLOGICAL, cost: 150 },
+  { id: 'emg', name: 'Electromyography (EMG)', category: TestCategory.NEUROLOGICAL, cost: 180 },
+  { id: 'nerve-conduction', name: 'Nerve Conduction Study', category: TestCategory.NEUROLOGICAL, cost: 160 },
+  { id: 'neuro-exam', name: 'Detailed Neurological Examination', category: TestCategory.NEUROLOGICAL, cost: 50 },
+  { id: 'neurovascular-assessment', name: 'Neurovascular Assessment', category: TestCategory.NEUROLOGICAL, cost: 0 },
   
   // Urinalysis
-  { id: 'urinalysis', name: 'Urinalysis', category: 'Urinalysis', cost: 20 },
-  { id: 'urine-micro', name: 'Urine Microscopy', category: 'Urinalysis', cost: 25 },
-  { id: 'urine-protein', name: '24-hour Urine Protein', category: 'Urinalysis', cost: 60 },
-  { id: 'urine-creatinine', name: 'Urine Creatinine Clearance', category: 'Urinalysis', cost: 45 },
+  { id: 'urinalysis', name: 'Urinalysis', category: TestCategory.URINALYSIS, cost: 20 },
+  { id: 'urine-micro', name: 'Urine Microscopy', category: TestCategory.URINALYSIS, cost: 25 },
+  { id: 'urine-protein', name: '24-hour Urine Protein', category: TestCategory.URINALYSIS, cost: 60 },
+  { id: 'urine-creatinine', name: 'Urine Creatinine Clearance', category: TestCategory.URINALYSIS, cost: 45 },
   
   // Hormones
-  { id: 'cortisol', name: 'Cortisol Level', category: 'Hormones', cost: 40 },
-  { id: 'testosterone', name: 'Testosterone', category: 'Hormones', cost: 45 },
-  { id: 'estradiol', name: 'Estradiol', category: 'Hormones', cost: 45 },
-  { id: 'growth-hormone', name: 'Growth Hormone', category: 'Hormones', cost: 60 },
-  { id: 'insulin', name: 'Insulin Level', category: 'Hormones', cost: 35 },
-  { id: 'prolactin', name: 'Prolactin', category: 'Hormones', cost: 40 },
+  { id: 'cortisol', name: 'Cortisol Level', category: TestCategory.HORMONES, cost: 40 },
+  { id: 'testosterone', name: 'Testosterone', category: TestCategory.HORMONES, cost: 45 },
+  { id: 'estradiol', name: 'Estradiol', category: TestCategory.HORMONES, cost: 45 },
+  { id: 'growth-hormone', name: 'Growth Hormone', category: TestCategory.HORMONES, cost: 60 },
+  { id: 'insulin', name: 'Insulin Level', category: TestCategory.HORMONES, cost: 35 },
+  { id: 'prolactin', name: 'Prolactin', category: TestCategory.HORMONES, cost: 40 },
   
   // Monitoring
-  { id: 'vital-signs', name: 'Vital Signs Monitoring', category: 'Monitoring', cost: 25 },
-  { id: 'bp-monitoring', name: '24-hour Blood Pressure Monitoring', category: 'Monitoring', cost: 100 },
-  { id: 'pulse-ox', name: 'Pulse Oximetry', category: 'Monitoring', cost: 15 },
-  { id: 'telemetry', name: 'Cardiac Telemetry', category: 'Monitoring', cost: 150 },
+  { id: 'vital-signs', name: 'Vital Signs Monitoring', category: TestCategory.VITALS, cost: 25 },
+  { id: 'bp-monitoring', name: '24-hour Blood Pressure Monitoring', category: TestCategory.VITALS, cost: 100 },
+  { id: 'pulse-ox', name: 'Pulse Oximetry', category: TestCategory.VITALS, cost: 15 },
+  { id: 'telemetry', name: 'Cardiac Telemetry', category: TestCategory.VITALS, cost: 150 },
   
   // Other Specialized Tests
-  { id: 'spirometry', name: 'Spirometry (Pulmonary Function)', category: 'Other', cost: 80 },
-  { id: 'peak-flow', name: 'Peak Flow Measurement', category: 'Other', cost: 20 },
-  { id: 'sleep-study', name: 'Sleep Study (Polysomnography)', category: 'Other', cost: 800 },
-  { id: 'endoscopy', name: 'Upper Endoscopy (EGD)', category: 'Other', cost: 500 },
-  { id: 'colonoscopy', name: 'Colonoscopy', category: 'Other', cost: 600 },
-  { id: 'bone-density', name: 'DEXA Bone Density Scan', category: 'Other', cost: 150 },
-  { id: 'bone-scan', name: 'Bone Scan', category: 'Imaging', cost: 600 },
-  { id: 'h-pylori', name: 'H. pylori Test', category: 'Other', cost: 50 },
+  { id: 'spirometry', name: 'Spirometry (Pulmonary Function)', category: TestCategory.LABS, cost: 80 },
+  { id: 'peak-flow', name: 'Peak Flow Measurement', category: TestCategory.LABS, cost: 20 },
+  { id: 'sleep-study', name: 'Sleep Study (Polysomnography)', category: TestCategory.LABS, cost: 800 },
+  { id: 'endoscopy', name: 'Upper Endoscopy (EGD)', category: TestCategory.LABS, cost: 500 },
+  { id: 'colonoscopy', name: 'Colonoscopy', category: TestCategory.LABS, cost: 600 },
+  { id: 'bone-density', name: 'DEXA Bone Density Scan', category: TestCategory.LABS, cost: 150 },
+  { id: 'bone-scan', name: 'Bone Scan', category: TestCategory.IMAGING, cost: 600 },
+  { id: 'h-pylori', name: 'H. pylori Test', category: TestCategory.LABS, cost: 50 },
 ];
 
 // Comprehensive Diagnosis Database
 export const medicalDiagnoses: MedicalDiagnosis[] = [
   // Infectious Diseases
+  { id: 'cellulitis-dog-bite', name: 'Cellulitis secondary to dog bite', category: 'Infectious Disease', icd10: 'L03.9', correct: true, synonyms: ['Post-bite cellulitis', 'Dog bite infection'], commonTerms: ['infected dog bite', 'bite wound infection', 'skin infection from bite'] },
   { id: 'cellulitis', name: 'Cellulitis', category: 'Infectious Disease', icd10: 'L03.9' },
   { id: 'pneumonia', name: 'Community-Acquired Pneumonia', category: 'Infectious Disease', icd10: 'J15.9' },
   { id: 'uti', name: 'Urinary Tract Infection', category: 'Infectious Disease', icd10: 'N39.0' },
@@ -183,7 +204,7 @@ export const medicalDiagnoses: MedicalDiagnosis[] = [
   { id: 'meningitis', name: 'Bacterial Meningitis', category: 'Infectious Disease', icd10: 'G00.9' },
   { id: 'endocarditis', name: 'Infective Endocarditis', category: 'Infectious Disease', icd10: 'I33.0' },
   { id: 'osteomyelitis', name: 'Osteomyelitis', category: 'Infectious Disease', icd10: 'M86.9' },
-  { id: 'abscess', name: 'Skin Abscess', category: 'Infectious Disease', icd10: 'L02.9' },
+  { id: 'abscess', name: 'Abscess', category: 'Infectious Disease', icd10: 'L02.9', correct: false, synonyms: ['Purulent collection', 'Localized infection'], commonTerms: ['pus pocket', 'boil', 'infected pocket'] },
   { id: 'bronchitis', name: 'Acute Bronchitis', category: 'Infectious Disease', icd10: 'J20.9' },
   
   // Cardiovascular
@@ -273,9 +294,30 @@ export const medicalDiagnoses: MedicalDiagnosis[] = [
 // Comprehensive Treatment Database
 export const medicalTreatments: MedicalTreatment[] = [
   // Antibiotics
-  { id: 'amoxicillin', name: 'Amoxicillin', category: 'Medication', dosage: '500mg TID' },
-  { id: 'augmentin', name: 'Amoxicillin-Clavulanate (Augmentin)', category: 'Medication', dosage: '875mg BID' },
-  { id: 'azithromycin', name: 'Azithromycin (Z-pack)', category: 'Medication', dosage: '500mg day 1, then 250mg daily' },
+  { 
+    id: 'amoxicillin', 
+    name: 'Amoxicillin', 
+    category: 'Medication', 
+    dosage: '500mg TID',
+    synonyms: ['Amoxil', 'Trimox'],
+    commonTerms: ['amox', 'penicillin antibiotic']
+  },
+  { 
+    id: 'augmentin', 
+    name: 'Amoxicillin-Clavulanate (Augmentin)', 
+    category: 'Medication', 
+    dosage: '875mg BID',
+    synonyms: ['Amoxiclav', 'Clavamox'],
+    commonTerms: ['broad spectrum antibiotic', 'amox-clav', 'dog bite antibiotic']
+  },
+  { 
+    id: 'azithromycin', 
+    name: 'Azithromycin (Z-pack)', 
+    category: 'Medication', 
+    dosage: '500mg day 1, then 250mg daily',
+    synonyms: ['Zithromax', 'Z-pak'],
+    commonTerms: ['Z pack', 'five day antibiotic']
+  },
   { id: 'ceftriaxone', name: 'Ceftriaxone', category: 'Medication', dosage: '1-2g IV daily' },
   { id: 'ciprofloxacin', name: 'Ciprofloxacin', category: 'Medication', dosage: '500mg BID' },
   { id: 'doxycycline', name: 'Doxycycline', category: 'Medication', dosage: '100mg BID' },
@@ -330,9 +372,22 @@ export const medicalTreatments: MedicalTreatment[] = [
   { id: 'simethicone', name: 'Simethicone', category: 'Medication', dosage: '80mg QID' },
   
   // Procedures
-  { id: 'iv-fluids', name: 'IV Fluid Resuscitation', category: 'Procedure', description: 'Normal saline or lactated ringers' },
+  { 
+    id: 'wound-care', 
+    name: 'Wound Irrigation and Cleaning', 
+    category: 'Procedure',
+    synonyms: ['Wound debridement', 'Wound lavage'],
+    commonTerms: ['clean the wound', 'wash out the wound', 'wound cleaning']
+  },
+  { 
+    id: 'iv-fluids', 
+    name: 'IV Fluid Resuscitation', 
+    category: 'Procedure', 
+    description: 'Normal saline or lactated ringers',
+    synonyms: ['Intravenous fluids', 'Volume resuscitation'],
+    commonTerms: ['fluids', 'IV', 'drip']
+  },
   { id: 'oxygen-therapy', name: 'Oxygen Therapy', category: 'Procedure', description: '2-4L nasal cannula' },
-  { id: 'wound-care', name: 'Wound Irrigation and Cleaning', category: 'Procedure' },
   { id: 'suturing', name: 'Suture Repair', category: 'Procedure' },
   { id: 'intubation', name: 'Endotracheal Intubation', category: 'Procedure' },
   { id: 'central-line', name: 'Central Venous Catheter', category: 'Procedure' },
@@ -358,14 +413,26 @@ export const medicalTreatments: MedicalTreatment[] = [
   { id: 'physical-therapy', name: 'Physical Therapy', category: 'Lifestyle' },
   { id: 'bed-rest', name: 'Bed Rest', category: 'Lifestyle' },
   { id: 'activity-restriction', name: 'Activity Restriction', category: 'Lifestyle' },
-  { id: 'warm-compresses', name: 'Warm Compresses', category: 'Lifestyle' },
+  { id: 'warm-compress', name: 'Warm Compresses', category: 'Lifestyle', synonyms: ['Heat therapy', 'Local heat application'], commonTerms: ['warm cloth', 'heating pad', 'hot pack'] },
   { id: 'cold-therapy', name: 'Ice/Cold Therapy', category: 'Lifestyle' },
   { id: 'elevation', name: 'Limb Elevation', category: 'Lifestyle' },
   { id: 'brat-diet', name: 'BRAT Diet', category: 'Lifestyle', description: 'Bananas, Rice, Applesauce, Toast' },
   { id: 'oral-rehydration', name: 'Oral Rehydration Therapy', category: 'Lifestyle' },
   
   // Follow-up Care
-  { id: 'primary-care-followup', name: 'Primary Care Follow-up', category: 'Follow-up', description: 'In 1-2 weeks' },
+  { 
+    id: 'primary-care-followup', 
+    name: 'Primary Care Follow-up', 
+    category: 'Follow-up',
+    description: 'In 1-2 weeks'
+  },
+  { 
+    id: 'followup-48h', 
+    name: 'Follow-up in 48-72 hours', 
+    category: 'Follow-up',
+    synonyms: ['Early follow-up', 'Short-term follow-up'],
+    commonTerms: ['come back in 2-3 days', 'check back', 'return visit']
+  },
   { id: 'cardiology-referral', name: 'Cardiology Consultation', category: 'Follow-up' },
   { id: 'neurology-referral', name: 'Neurology Consultation', category: 'Follow-up' },
   { id: 'gastro-referral', name: 'Gastroenterology Referral', category: 'Follow-up' },
@@ -388,6 +455,13 @@ export const medicalTreatments: MedicalTreatment[] = [
   { id: 'intense-exercise', name: 'Continue Intense Exercise', category: 'Lifestyle', description: 'CONTRAINDICATED in cardiac conditions' },
   { id: 'antibiotics-viral', name: 'Antibiotics for Viral Illness', category: 'Medication', description: 'Unnecessary and inappropriate' },
   { id: 'steroids-infection', name: 'Corticosteroids in Active Infection', category: 'Medication', description: 'May worsen infection' },
+  // Endocrine Medications
+  { id: 'insulin-therapy', name: 'Insulin therapy (long and short-acting)', category: 'Medication', dosage: 'Based on blood glucose levels' },
+  { id: 'diabetes-education', name: 'Diabetes education and counseling', category: 'Follow-up', description: 'Comprehensive diabetes management education' },
+  { id: 'glucose-monitoring', name: 'Blood glucose monitoring supplies', category: 'Procedure', description: 'Glucometer and testing strips' },
+  { id: 'nutritionist-consult', name: 'Nutritionist consultation', category: 'Follow-up', description: 'Diabetes-specific nutrition planning' },
+  { id: 'metformin', name: 'Metformin therapy', category: 'Medication', dosage: '500-2000mg daily', description: 'CONTRAINDICATED in Type 1 Diabetes' },
+  { id: 'low-carb-diet', name: 'Low-carb diet only', category: 'Lifestyle', description: 'CONTRAINDICATED as sole treatment for Type 1 Diabetes' },
 ];
 
 // Helper functions for filtering and searching
@@ -404,28 +478,60 @@ export const getTreatmentsByCategory = (category: string): MedicalTreatment[] =>
 };
 
 export const searchTests = (query: string): MedicalTest[] => {
-  const lowercaseQuery = query.toLowerCase();
-  return medicalTests.filter(test => 
-    test.name.toLowerCase().includes(lowercaseQuery) ||
-    test.category.toLowerCase().includes(lowercaseQuery)
-  );
+  const lowercaseQuery = query.toLowerCase().trim();
+  const searchTerms = lowercaseQuery.split(/\s+/);
+
+  return medicalTests.filter(test => {
+    return searchTerms.every(term => {
+      const matchesName = test.name.toLowerCase().includes(term);
+      const matchesSynonyms = test.synonyms?.some(syn => syn.toLowerCase().includes(term)) || false;
+      const matchesCommonTerms = test.commonTerms?.some(common => common.toLowerCase().includes(term)) || false;
+      const matchesCategory = test.category.toLowerCase().includes(term);
+      const matchesDescription = test.description?.toLowerCase().includes(term) || false;
+
+      return matchesName || matchesSynonyms || matchesCommonTerms || 
+             matchesCategory || matchesDescription;
+    });
+  });
 };
 
 export const searchDiagnoses = (query: string): MedicalDiagnosis[] => {
-  const lowercaseQuery = query.toLowerCase();
-  return medicalDiagnoses.filter(diagnosis => 
-    diagnosis.name.toLowerCase().includes(lowercaseQuery) ||
-    diagnosis.category.toLowerCase().includes(lowercaseQuery)
-  );
+  const lowercaseQuery = query.toLowerCase().trim();
+  const searchTerms = lowercaseQuery.split(/\s+/);
+
+  return medicalDiagnoses.filter(diagnosis => {
+    return searchTerms.every(term => {
+      const matchesName = diagnosis.name.toLowerCase().includes(term);
+      const matchesSynonyms = diagnosis.synonyms?.some(syn => syn.toLowerCase().includes(term)) || false;
+      const matchesCommonTerms = diagnosis.commonTerms?.some(common => common.toLowerCase().includes(term)) || false;
+      const matchesCategory = diagnosis.category?.toLowerCase().includes(term) || false;
+      const matchesICD = diagnosis.icd10?.toLowerCase().includes(term) || false;
+      const matchesDescription = diagnosis.description?.toLowerCase().includes(term) || false;
+
+      return matchesName || matchesSynonyms || matchesCommonTerms || 
+             matchesCategory || matchesICD || matchesDescription;
+    });
+  });
 };
 
 export const searchTreatments = (query: string): MedicalTreatment[] => {
-  const lowercaseQuery = query.toLowerCase();
-  return medicalTreatments.filter(treatment => 
-    treatment.name.toLowerCase().includes(lowercaseQuery) ||
-    treatment.category.toLowerCase().includes(lowercaseQuery) ||
-    (treatment.dosage && treatment.dosage.toLowerCase().includes(lowercaseQuery))
-  );
+  const lowercaseQuery = query.toLowerCase().trim();
+  const searchTerms = lowercaseQuery.split(/\s+/); // Split into individual words
+
+  return medicalTreatments.filter(treatment => {
+    // Check each search term against all possible matches
+    return searchTerms.every(term => {
+      const matchesName = treatment.name.toLowerCase().includes(term);
+      const matchesSynonyms = treatment.synonyms?.some(syn => syn.toLowerCase().includes(term)) || false;
+      const matchesCommonTerms = treatment.commonTerms?.some(common => common.toLowerCase().includes(term)) || false;
+      const matchesCategory = treatment.category.toLowerCase().includes(term);
+      const matchesDosage = treatment.dosage?.toLowerCase().includes(term) || false;
+      const matchesDescription = treatment.description?.toLowerCase().includes(term) || false;
+
+      return matchesName || matchesSynonyms || matchesCommonTerms || 
+             matchesCategory || matchesDosage || matchesDescription;
+    });
+  });
 };
 
 export const getTestCategories = (): string[] => {

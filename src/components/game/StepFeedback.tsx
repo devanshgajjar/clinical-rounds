@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StepType, XPMultiplier } from '../../types/game';
-import { CaseData } from '../../data/cases';
+import { CaseData } from '../../types/game';
 import { XPSystem } from '../../logic/xpSystem';
 import { playSound } from '../../utils/soundManager';
 

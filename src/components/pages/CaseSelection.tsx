@@ -158,7 +158,7 @@ const CaseSelection: React.FC = () => {
                             <span className="text-sm font-medium text-gray-900">
                               {isCompleted 
                                 ? `+${getEarnedXP(caseData.id)}XP Earned`
-                                : `+${caseData.scoring.baseXP}XP`
+                                : `+${caseData.scoring?.baseXP ?? 100}XP`
                               }
                             </span>
                             {statusIcon && (

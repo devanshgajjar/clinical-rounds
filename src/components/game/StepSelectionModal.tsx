@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { StepType } from '../../types/game';
-import { CaseData } from '../../data/cases';
+import { CaseData } from '../../types/game';
 import { playSound } from '../../utils/soundManager';
 
 interface StepSelectionModalProps {

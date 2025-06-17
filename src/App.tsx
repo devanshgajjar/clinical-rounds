@@ -108,7 +108,7 @@ const CustomCaseIntroduction: React.FC<{ caseId: string; onStart: () => void; on
         };
       default:
         return {
-          urgency: caseData.difficulty >= 4 ? 'High' : caseData.difficulty >= 3 ? 'Moderate' : 'Low',
+          urgency: Number(caseData.difficulty) >= 4 ? 'High' : Number(caseData.difficulty) >= 3 ? 'Moderate' : 'Low',
           lastSeen: 'New presentation',
           currentStatus: 'Seeking medical evaluation',
           keyFindings: [caseData.patient.chiefComplaint]
@@ -218,7 +218,7 @@ const CustomCaseIntroduction: React.FC<{ caseId: string; onStart: () => void; on
               <div>
                 <span className="text-sm font-medium text-gray-600">Difficulty:</span>
                 <span className="ml-2">
-                  {[...Array(caseData.difficulty)].map((_, i) => (
+                  {[...Array(Number(caseData.difficulty))].map((_, i) => (
                     <span key={i} className="text-yellow-500">💎</span>
                   ))}
                 </span>
@@ -343,16 +343,12 @@ const AppContent: React.FC = () => {
     }
 
     if (gameState.showSummary) {
-      // Play case completion sound
-      playSound.caseComplete();
-      
       // Save results to localStorage for case selection display
       if (gameState.xpCalculation && gameState.currentCase) {
         const caseId = gameState.currentCase.id;
         const averageScore = Math.round(
           gameState.currentStepResults.reduce((sum, step) => sum + step.score, 0) / gameState.currentStepResults.length
         );
-        
         const results = {
           caseId,
           averageScore,
@@ -361,49 +357,14 @@ const AppContent: React.FC = () => {
           completedAt: new Date().toISOString(),
           stepResults: gameState.currentStepResults
         };
-        
         localStorage.setItem(`case_${caseId}_results`, JSON.stringify(results));
         localStorage.setItem(`case_${caseId}_completed`, 'true');
-        
-        console.log('Saved case results to localStorage:', results);
       }
-
-      return (
-        <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4">
-            <div className="p-8 text-center">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">🎉 Case Complete!</h2>
-              <p className="text-gray-600 mb-6">Great job completing this case!</p>
-              
-              {gameState.xpCalculation && (
-                <div className="bg-green-50 rounded-lg p-4 mb-6">
-                  <div className="text-2xl font-bold text-green-600 mb-2">
-                    +{gameState.xpCalculation.finalXP} XP
-                  </div>
-                  <div className="text-sm text-green-700">
-                    Total XP: {gameState.progress.totalXP}
-                  </div>
-                </div>
-              )}
-              
-              <button 
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full"
-                onClick={() => {
-                  playSound.buttonClick();
-                  window.location.reload();
-                }}
-                onMouseEnter={() => playSound.buttonHover()}
-              >
-                Continue Learning
-              </button>
-            </div>
-          </div>
-        </div>
-      );
+      // Instead of a reload, just show CaseSelection
+      return <CaseSelection />;
     }
 
-    // Show unified case selection interface (like the screenshot)
-    console.log('App: rendering unified CaseSelection');
+    // Fallback: always show CaseSelection
     return <CaseSelection />;
   };
 

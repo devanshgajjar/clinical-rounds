@@ -69,7 +69,8 @@ const CaseSummary: React.FC = () => {
     <div className="case-summary-overlay">
       <div className="case-summary">
         <div className="summary-header">
-          <h2>🏁 Case Complete!</h2>
+          {/* <CloseCaseButton showText={true} /> */}
+          <h2> Case Complete!</h2>
           <div className="case-title">{gameCase.title}</div>
           <div className="patient-name">{gameCase.patientInfo.name}</div>
         </div>

@@ -23,7 +23,7 @@ const LevelSelection: React.FC = () => {
   const { navigateToScreen, gameState } = useGame();
 
   const getCategoryProgress = (categoryId: string) => {
-    const categoryCase = casesData.filter(c => c.categoryId === categoryId);
+    const categoryCase = casesData.filter(c => c.system === categoryId);
     const completedCases = gameState.progress.completedCases.filter(caseId =>
       categoryCase.some(c => c.id === caseId)
     );
@@ -85,7 +85,7 @@ const LevelSelection: React.FC = () => {
               const progress = getCategoryProgress(category.id);
               const progressPercentage = progress.total > 0 ? 
                 (progress.completed / progress.total) * 100 : 0;
-              const categoryCase = casesData.filter(c => c.categoryId === category.id);
+              const categoryCase = casesData.filter(c => c.system === category.id);
               const isUnlocked = gameState.progress.unlockedSystems.includes(category.id) || category.id === 'infectious';
               const isCompleted = progress.completed === progress.total && progress.total > 0;
               const config = getCategoryConfig(category.id);

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { CaseData } from '../../data/cases';
-import { StepType } from '../../types/game';
+import React, { useState, useEffect } from 'react';
+import { CaseData } from '../../types/game';
+import { StepType, Question } from '../../types/game';
 import { playSound } from '../../utils/soundManager';
+import { useGame } from '../../context/GameContext';
 
 interface HistoryTakingProps {
   caseData: CaseData;
@@ -10,6 +11,7 @@ interface HistoryTakingProps {
   attempts: number;
   maxAttempts: number;
   timeElapsed: number;
+  onClose?: () => void;
 }
 
 const HistoryTaking: React.FC<HistoryTakingProps> = ({
@@ -18,28 +20,47 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
   onRetry,
   attempts,
   maxAttempts,
-  timeElapsed
+  timeElapsed,
+  onClose
 }) => {
+  const { gameState } = useGame();
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // if (!gameState.isInGame || !gameState.currentCase) return null;
+
   const historyData = caseData.steps[StepType.HISTORY_TAKING];
+  console.log('HistoryTaking: questions array:', historyData?.questions);
+
+  if (!historyData?.questions || historyData.questions.length === 0) {
+    return <div className="text-center text-gray-500 py-12">No history questions available for this case. (Check your case data.)</div>;
+  }
   
   // Categorize questions - use only the actual case questions
   const categorizeQuestions = () => {
-    return historyData.questions.map(q => ({
-        ...q,
-        mappedCategory: q.category === 'Present Illness' ? 'History of Present Illness (HPI)' :
-                       q.category === 'Past Medical' ? 'Past Medical History' :
-                     q.category === 'Social' ? 'Social History' :
-                     q.category === 'Family' ? 'Family History' :
-                     q.category === 'Review of Systems' ? 'Review of Systems' :
-                       q.category
+    return historyData.questions.map((q: any) => ({
+      ...q,
+      mappedCategory: q.category
+        ? (q.category === 'Present Illness' ? 'History of Present Illness (HPI)'
+          : q.category === 'Past Medical' ? 'Past Medical History'
+          : q.category === 'Social' ? 'Social History'
+          : q.category === 'Family' ? 'Family History'
+          : q.category === 'Review of Systems' ? 'Review of Systems'
+          : q.category)
+        : 'General History'
     }));
   };
 
   const categorizedQuestions = categorizeQuestions();
-  const categories = ['History of Present Illness (HPI)', 'Past Medical History', 'Social History', 'Family History', 'Review of Systems'];
+  const allCategories = [
+    'Present Illness',
+    'Past Medical',
+    'Social',
+    'Family',
+    'Review of Systems',
+    'Other'
+  ];
+  const categories = Array.from(new Set(categorizedQuestions.map(q => q.category || 'Other'))).filter(cat => allCategories.includes(cat)).concat('Other');
 
   const handleQuestionToggle = (questionId: string) => {
     setSelectedQuestions(prev => {
@@ -53,8 +74,11 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
     });
   };
 
+  const minRequired = caseData.steps[StepType.HISTORY_TAKING].minimumRequired || 3;
+  const isValidSelection = selectedQuestions.length >= minRequired;
+
   const handleSubmit = async () => {
-    if (selectedQuestions.length >= 3 && !isSubmitting) {
+    if (selectedQuestions.length >= minRequired && !isSubmitting) {
       setIsSubmitting(true);
       playSound.stepComplete();
       try {
@@ -63,7 +87,6 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
           categorizedQuestions.find(q => q.id === id)
         ));
         onSubmit(selectedQuestions);
-        // Keep submitting state for a moment to show feedback
         setTimeout(() => setIsSubmitting(false), 2000);
       } catch (error) {
         setIsSubmitting(false);
@@ -71,37 +94,35 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
     }
   };
 
-
-
   const getQuestionsByCategory = (category: string) => {
-    return categorizedQuestions.filter(q => q.mappedCategory === category);
+    return categorizedQuestions.filter((q: any) => q.mappedCategory === category);
   };
 
-  const isValidSelection = selectedQuestions.length >= 3;
-
   return (
-    <div className="bg-white">
+    <div className="bg-white relative">
       <div className="max-w-4xl mx-auto p-8">
-            
+        {/* Progress Indicator */}
+        <div className="selection-progress-indicator mb-4">
+          <span>
+            Selected {selectedQuestions.length} of minimum {minRequired} required
+          </span>
+        </div>
         {/* Categories */}
         <div className="space-y-8">
           {categories.map((category) => {
-              const questions = getQuestionsByCategory(category);
-              if (questions.length === 0) return null;
-              
-              return (
+            const questions = categorizedQuestions.filter((q: any) => (q.category || 'Other') === category);
+            if (questions.length === 0) return null;
+            return (
               <div key={category} className="border border-gray-200 rounded-lg p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
                   {category}
                 </h2>
-                
                 <div className="space-y-3">
-                  {questions.map((question) => {
-                        const isSelected = selectedQuestions.includes(question.id);
-                        
-                        return (
+                  {questions.map((question: any) => {
+                    const isSelected = selectedQuestions.includes(question.id);
+                    return (
                       <label
-                            key={question.id}
+                        key={question.id}
                         className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
                       >
                         <input
@@ -111,16 +132,16 @@ const HistoryTaking: React.FC<HistoryTakingProps> = ({
                           className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                         />
                         <span className="text-gray-900">
-                              {question.text}
+                          {question.text}
                         </span>
                       </label>
-                        );
-                      })}
-                    </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
 
         {/* Submit Button */}
         <div className="mt-8 flex justify-center">

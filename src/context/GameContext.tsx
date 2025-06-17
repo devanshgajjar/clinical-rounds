@@ -10,7 +10,10 @@ import {
   XPMultiplier,
   PatientEmotionalState,
   Case,
-  StepOrderWarning
+  StepOrderWarning,
+  CaseData,
+  BodySystem,
+  TreatmentCategory
 } from '../types/game';
 import { getCase, defaultRetryMechanics } from '../data/gameData';
 import { casesData } from '../data/cases';
@@ -87,7 +90,8 @@ type GameAction =
   | { type: 'CONTINUE_TO_STEP_SELECTION' }
   | { type: 'START_GAMEPLAY'; payload: { stepType: StepType } }
   | { type: 'SAVE_PROGRESS'; payload: { caseId: string; stepResults: StepResult[]; patientState: PatientEmotionalState } }
-  | { type: 'LOAD_PROGRESS'; payload: { caseId: string } };
+  | { type: 'LOAD_PROGRESS'; payload: { caseId: string } }
+  | { type: 'CLOSE_CASE' };
 
 // Game state reducer
 const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -97,47 +101,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const caseData = getCaseById(action.payload.caseId);
       if (caseData) {
         // Convert CaseData to Case format for game context
-        const gameCase = {
-          id: caseData.id,
-          title: caseData.title,
-          description: caseData.patient.background,
-          bodySystem: caseData.system as any, // Will need to map properly
-          difficulty: caseData.difficulty,
-          baseXP: caseData.scoring.baseXP,
-          idealStepOrder: caseData.scoring.optimalOrder,
-          patientInfo: {
-            name: caseData.patient.name,
-            age: caseData.patient.age,
-            gender: caseData.patient.gender,
-            chiefComplaint: caseData.patient.chiefComplaint,
-            avatar: '🏥' // Default avatar
-          },
-          steps: {
-            [StepType.HISTORY_TAKING]: { questions: [], requiredSelections: 3, maxSelections: 10 },
-            [StepType.ORDERING_TESTS]: { tests: [], requiredSelections: 2, maxSelections: 5 },
-            [StepType.DIAGNOSIS]: { diagnosisOptions: [], requiredSelections: 1 },
-            [StepType.TREATMENT]: { treatmentOptions: [], requiredSelections: 2, maxSelections: 5 }
-          },
-          cutscenes: {
-            [StepType.HISTORY_TAKING]: { intro: '', success: '', failure: '' },
-            [StepType.ORDERING_TESTS]: { intro: '', success: '', failure: '' },
-            [StepType.DIAGNOSIS]: { intro: '', success: '', failure: '' },
-            [StepType.TREATMENT]: { intro: '', success: '', failure: '' }
-          },
-          mentorFeedback: {
-            [StepType.HISTORY_TAKING]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
-            [StepType.ORDERING_TESTS]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
-            [StepType.DIAGNOSIS]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
-            [StepType.TREATMENT]: { success: '', failure: '', hint: '', gentle: '', blunt: '' }
-          },
-          culturalScenarios: [],
-          patientInitialState: {
-            trust: 50,
-            anxiety: 50,
-            satisfaction: 50,
-            currentEmotion: 'happy' as any
-          }
-        };
+        const gameCase = convertCaseDataToCase(caseData);
 
         return {
           ...state,
@@ -174,47 +138,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const caseData = getCaseById(action.payload.caseId);
       if (caseData) {
         // Convert CaseData to Case format for game context
-        const gameCase = {
-          id: caseData.id,
-          title: caseData.title,
-          description: caseData.patient.background,
-          bodySystem: caseData.system as any,
-          difficulty: caseData.difficulty,
-          baseXP: caseData.scoring.baseXP,
-          idealStepOrder: caseData.scoring.optimalOrder,
-          patientInfo: {
-            name: caseData.patient.name,
-            age: caseData.patient.age,
-            gender: caseData.patient.gender,
-            chiefComplaint: caseData.patient.chiefComplaint,
-            avatar: '🏥'
-          },
-          steps: {
-            [StepType.HISTORY_TAKING]: { questions: [], requiredSelections: 3, maxSelections: 10 },
-            [StepType.ORDERING_TESTS]: { tests: [], requiredSelections: 2, maxSelections: 5 },
-            [StepType.DIAGNOSIS]: { diagnosisOptions: [], requiredSelections: 1 },
-            [StepType.TREATMENT]: { treatmentOptions: [], requiredSelections: 2, maxSelections: 5 }
-          },
-          cutscenes: {
-            [StepType.HISTORY_TAKING]: { intro: '', success: '', failure: '' },
-            [StepType.ORDERING_TESTS]: { intro: '', success: '', failure: '' },
-            [StepType.DIAGNOSIS]: { intro: '', success: '', failure: '' },
-            [StepType.TREATMENT]: { intro: '', success: '', failure: '' }
-          },
-          mentorFeedback: {
-            [StepType.HISTORY_TAKING]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
-            [StepType.ORDERING_TESTS]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
-            [StepType.DIAGNOSIS]: { success: '', failure: '', hint: '', gentle: '', blunt: '' },
-            [StepType.TREATMENT]: { success: '', failure: '', hint: '', gentle: '', blunt: '' }
-          },
-          culturalScenarios: [],
-          patientInitialState: {
-            trust: 50,
-            anxiety: 50,
-            satisfaction: 50,
-            currentEmotion: 'happy' as any
-          }
-        };
+        const gameCase = convertCaseDataToCase(caseData);
 
         const existingProgress = state.progress.casesInProgress[action.payload.caseId];
         
@@ -492,6 +416,22 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       };
     }
 
+    case 'CLOSE_CASE': {
+      return {
+        ...state,
+        currentCase: undefined,
+        isInGame: false,
+        showSummary: false,
+        showCaseIntro: false,
+        showStepSelection: false,
+        showXPCutscene: false,
+        progress: {
+          ...state.progress,
+          currentCase: ''
+        }
+      };
+    }
+
     default:
       return state;
   }
@@ -525,6 +465,7 @@ interface GameContextType {
   getXPMultiplier: () => XPMultiplier;
   checkStepOrderWarning: (stepType: StepType) => StepOrderWarning | null;
   getPatientState: () => PatientEmotionalState;
+  closeCase: () => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -629,6 +570,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     return gameState.currentPatientState;
   };
 
+  const closeCase = () => {
+    dispatch({ type: 'CLOSE_CASE' });
+  };
+
   const contextValue: GameContextType = {
     gameState,
     uiState,
@@ -652,7 +597,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     getStepProgress,
     getXPMultiplier,
     checkStepOrderWarning,
-    getPatientState
+    getPatientState,
+    closeCase
   };
 
   return <GameContext.Provider value={contextValue}>{children}</GameContext.Provider>;
@@ -666,4 +612,113 @@ export const useGame = (): GameContextType => {
   return context;
 };
 
-const getCaseById = (id: string) => casesData.find(c => c.id === id); 
+const getCaseById = (id: string) => casesData.find(c => c.id === id);
+
+const convertCaseDataToCase = (caseData: CaseData): Case => {
+  const mapTreatmentCategory = (category: TreatmentCategory): TreatmentCategory => {
+    return category;
+  };
+
+  return {
+    id: caseData.id,
+    title: caseData.title,
+    description: caseData.patient.background || '',
+    bodySystem: caseData.system as BodySystem,
+    difficulty: parseInt(caseData.difficulty) as 1 | 2 | 3 | 4 | 5,
+    baseXP: caseData.scoring?.baseXP || 100,
+    idealStepOrder: caseData.scoring?.optimalOrder || [],
+    patientInfo: {
+      name: caseData.patient.name,
+      age: caseData.patient.age,
+      gender: caseData.patient.gender,
+      chiefComplaint: caseData.patient.chiefComplaint,
+      avatar: caseData.avatar
+    },
+    steps: {
+      [StepType.HISTORY_TAKING]: {
+        questions: caseData.steps[StepType.HISTORY_TAKING].questions,
+        requiredSelections: caseData.steps[StepType.HISTORY_TAKING].minimumRequired,
+        maxSelections: caseData.steps[StepType.HISTORY_TAKING].minimumRequired + 2
+      },
+      [StepType.ORDERING_TESTS]: {
+        tests: caseData.steps[StepType.ORDERING_TESTS].tests,
+        requiredSelections: caseData.steps[StepType.ORDERING_TESTS].maxAllowed,
+        maxSelections: caseData.steps[StepType.ORDERING_TESTS].maxAllowed
+      },
+      [StepType.DIAGNOSIS]: {
+        diagnosisOptions: caseData.steps[StepType.DIAGNOSIS].options,
+        requiredSelections: 1,
+        maxSelections: 1
+      },
+      [StepType.TREATMENT]: {
+        treatmentOptions: caseData.steps[StepType.TREATMENT].treatments.map(t => ({
+          id: t.id,
+          text: t.name,
+          category: t.category as TreatmentCategory,
+          isCorrect: t.necessary,
+          isSafe: true
+        })),
+        requiredSelections: caseData.steps[StepType.TREATMENT].maxAllowed,
+        maxSelections: caseData.steps[StepType.TREATMENT].maxAllowed
+      }
+    },
+    cutscenes: {
+      [StepType.HISTORY_TAKING]: {
+        intro: '',
+        success: '',
+        failure: ''
+      },
+      [StepType.ORDERING_TESTS]: {
+        intro: '',
+        success: '',
+        failure: ''
+      },
+      [StepType.DIAGNOSIS]: {
+        intro: '',
+        success: '',
+        failure: ''
+      },
+      [StepType.TREATMENT]: {
+        intro: '',
+        success: '',
+        failure: ''
+      }
+    },
+    mentorFeedback: {
+      [StepType.HISTORY_TAKING]: {
+        success: '',
+        failure: '',
+        hint: '',
+        gentle: '',
+        blunt: ''
+      },
+      [StepType.ORDERING_TESTS]: {
+        success: '',
+        failure: '',
+        hint: '',
+        gentle: '',
+        blunt: ''
+      },
+      [StepType.DIAGNOSIS]: {
+        success: '',
+        failure: '',
+        hint: '',
+        gentle: '',
+        blunt: ''
+      },
+      [StepType.TREATMENT]: {
+        success: '',
+        failure: '',
+        hint: '',
+        gentle: '',
+        blunt: ''
+      }
+    },
+    patientInitialState: {
+      trust: 50,
+      anxiety: 50,
+      satisfaction: 50,
+      currentEmotion: 'worried' as const
+    }
+  };
+}; 

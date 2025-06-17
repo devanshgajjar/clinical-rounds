@@ -8,7 +8,8 @@ import {
   Test,
   DiagnosisOption,
   TreatmentOption,
-  Case
+  Case,
+  Treatment
 } from '../types/game';
 
 // XP Calculation Logic
@@ -70,7 +71,8 @@ export const calculateXP = (
 // Step Validation Logic
 export const validateHistoryTaking = (
   selectedQuestions: string[],
-  questions: Question[]
+  questions: Question[],
+  minimumRequired: number
 ): StepValidation => {
   const relevantQuestions = questions.filter(q => q.isRelevant);
   const selectedRelevant = selectedQuestions.filter(id => 
@@ -85,7 +87,7 @@ export const validateHistoryTaking = (
     (selectedRelevant.length * 25) - (selectedIrrelevant.length * 10)
   ));
 
-  const isValid = selectedQuestions.length === 4 && selectedRelevant.length >= 2;
+  const isValid = selectedQuestions.length >= minimumRequired && selectedRelevant.length >= 2;
 
   let feedback = '';
   if (selectedRelevant.length === relevantQuestions.length) {
@@ -102,7 +104,7 @@ export const validateHistoryTaking = (
     isValid,
     score,
     feedback,
-    requiredSelections: 4,
+    requiredSelections: minimumRequired,
     correctSelections: selectedRelevant,
     incorrectSelections: selectedIrrelevant,
     patientResponse: 'Thank you for asking those questions, doctor.',
@@ -115,40 +117,61 @@ export const validateTestOrdering = (
   selectedTests: string[],
   tests: Test[]
 ): StepValidation => {
-  const relevantTests = tests.filter(t => t.isRelevant);
-  const selectedRelevant = selectedTests.filter(id => 
-    relevantTests.some(t => t.id === id)
+  const necessaryTests = tests.filter(t => t.necessary);
+  const selectedNecessary = selectedTests.filter(id => 
+    necessaryTests.some(t => t.id === id)
   );
-  const selectedIrrelevant = selectedTests.filter(id => 
-    !relevantTests.some(t => t.id === id)
+  const selectedUnnecessary = selectedTests.filter(id => 
+    !necessaryTests.some(t => t.id === id)
   );
 
-  // Scoring: +25 points per relevant test, -15 per irrelevant (higher penalty)
-  const score = Math.max(0, Math.min(100, 
-    (selectedRelevant.length * 25) - (selectedIrrelevant.length * 15)
-  ));
+  // Check for contraindicated tests
+  const contraindicatedSelected = selectedTests.filter(id => 
+    tests.some(t => t.id === id && t.contraindicated === true)
+  );
 
-  const isValid = selectedTests.length <= 4 && selectedRelevant.length >= 2;
+  // Automatic fail if contraindicated tests are selected
+  if (contraindicatedSelected.length > 0) {
+    return {
+      isValid: false,
+      score: 0,
+      feedback: 'You selected contraindicated tests that could harm the patient.',
+      requiredSelections: necessaryTests.length,
+      correctSelections: selectedNecessary,
+      incorrectSelections: selectedUnnecessary,
+      patientResponse: 'I\'m concerned about these test choices.',
+      mentorFeedback: 'Review which tests are contraindicated in this case.',
+      empathyImpact: -5
+    };
+  }
+
+  // Calculate score based on necessary tests selected
+  const necessaryScore = (selectedNecessary.length / necessaryTests.length) * 100;
+  // Penalty for unnecessary tests
+  const unnecessaryPenalty = (selectedUnnecessary.length * 15);
+  const score = Math.max(0, Math.min(100, necessaryScore - unnecessaryPenalty));
+
+  const isValid = selectedNecessary.length >= Math.ceil(necessaryTests.length * 0.5); // At least 50% of necessary tests
 
   let feedback = '';
-  if (selectedRelevant.length >= 3 && selectedIrrelevant.length === 0) {
+  if (selectedNecessary.length === necessaryTests.length && selectedUnnecessary.length === 0) {
     feedback = 'Excellent test selection! Very efficient and targeted.';
-  } else if (selectedRelevant.length >= 2) {
-    feedback = 'Good test ordering, but consider cost-effectiveness.';
+  } else if (selectedNecessary.length >= Math.ceil(necessaryTests.length * 0.7)) {
+    feedback = 'Good test ordering, but some key tests were missed or unnecessary ones added.';
   } else {
-    feedback = 'Your test selection needs improvement. Focus on diagnostic yield.';
+    feedback = 'Your test selection needs improvement. Focus on necessary diagnostic tests.';
   }
 
   return {
     isValid,
     score,
     feedback,
-    requiredSelections: 4,
-    correctSelections: selectedRelevant,
-    incorrectSelections: selectedIrrelevant,
+    requiredSelections: necessaryTests.length,
+    correctSelections: selectedNecessary,
+    incorrectSelections: selectedUnnecessary,
     patientResponse: 'I hope these tests will help find out what\'s wrong.',
     mentorFeedback: feedback,
-    empathyImpact: 0
+    empathyImpact: score >= 80 ? 2 : 0
   };
 };
 
@@ -194,44 +217,64 @@ export const validateDiagnosis = (
 
 export const validateTreatment = (
   selectedTreatments: string[],
-  treatmentOptions: TreatmentOption[]
+  treatments: Treatment[]
 ): StepValidation => {
-  const correctTreatments = treatmentOptions.filter(t => t.isCorrect);
-  const safeTreatments = treatmentOptions.filter(t => t.isSafe);
+  const necessaryTreatments = treatments.filter(t => t.necessary);
+  const contraindicatedTreatments = treatments.filter(t => t.contraindicated);
   
-  const selectedCorrect = selectedTreatments.filter(id => 
-    correctTreatments.some(t => t.id === id)
+  const selectedNecessary = selectedTreatments.filter(id => 
+    necessaryTreatments.some(t => t.id === id)
   );
-  const selectedUnsafe = selectedTreatments.filter(id => 
-    !safeTreatments.some(t => t.id === id)
+  const selectedContraindicated = selectedTreatments.filter(id => 
+    contraindicatedTreatments.some(t => t.id === id)
   );
 
-  // Scoring: +20 per correct, -30 per unsafe (patient safety critical)
-  let score = (selectedCorrect.length * 20) - (selectedUnsafe.length * 30);
-  score = Math.max(0, Math.min(100, score));
+  // Automatic fail if contraindicated treatments are selected
+  if (selectedContraindicated.length > 0) {
+    return {
+      isValid: false,
+      score: 0,
+      feedback: 'SAFETY CONCERN: You selected contraindicated treatments that could harm the patient!',
+      correctSelections: selectedNecessary,
+      incorrectSelections: selectedContraindicated,
+      patientResponse: 'Doctor, I\'m worried about these treatments...',
+      mentorFeedback: 'Review which treatments are contraindicated in this case.',
+      empathyImpact: -5
+    };
+  }
 
-  const isValid = selectedCorrect.length >= 2 && selectedUnsafe.length === 0;
+  // Calculate score based on necessary treatments selected
+  const necessaryScore = (selectedNecessary.length / necessaryTreatments.length) * 100;
+  // Penalty for unnecessary treatments
+  const unnecessaryTreatments = selectedTreatments.filter(id => 
+    !necessaryTreatments.some(t => t.id === id) && 
+    !contraindicatedTreatments.some(t => t.id === id)
+  );
+  const unnecessaryPenalty = unnecessaryTreatments.length * 15;
+  const score = Math.max(0, Math.min(100, necessaryScore - unnecessaryPenalty));
+
+  const isValid = selectedNecessary.length >= Math.ceil(necessaryTreatments.length * 0.7); // At least 70% of necessary treatments
 
   let feedback = '';
-  if (selectedUnsafe.length > 0) {
-    feedback = 'SAFETY CONCERN: You selected potentially harmful treatments!';
-  } else if (selectedCorrect.length >= 3) {
+  if (score >= 90) {
     feedback = 'Excellent treatment plan! Comprehensive and appropriate.';
-  } else if (selectedCorrect.length >= 2) {
+  } else if (score >= 70) {
     feedback = 'Good treatment approach, but consider additional therapies.';
+  } else if (score >= 50) {
+    feedback = 'Basic treatment plan, but missing some key interventions.';
   } else {
-    feedback = 'Your treatment plan needs improvement. Consider evidence-based options.';
+    feedback = 'Your treatment plan needs significant improvement. Review guidelines.';
   }
 
   return {
     isValid,
     score,
     feedback,
-    correctSelections: selectedCorrect,
-    incorrectSelections: selectedUnsafe,
-    patientResponse: selectedUnsafe.length > 0 ? 'Doctor, I\'m worried about this treatment...' : 'Thank you for helping me feel better.',
+    correctSelections: selectedNecessary,
+    incorrectSelections: [...selectedContraindicated, ...unnecessaryTreatments],
+    patientResponse: score >= 70 ? 'Thank you for helping me feel better.' : 'I hope these treatments will help...',
     mentorFeedback: feedback,
-    empathyImpact: selectedUnsafe.length > 0 ? -5 : 3
+    empathyImpact: score >= 80 ? 3 : score >= 60 ? 0 : -2
   };
 };
 

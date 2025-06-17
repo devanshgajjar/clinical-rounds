@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { CaseData } from '../../data/cases';
+import { CaseData } from '../../types/game';
 import { StepType } from '../../types/game';
 import { 
   medicalTests, 
@@ -7,6 +7,7 @@ import {
   MedicalTest
 } from '../../data/medicalOptions';
 import { playSound } from '../../utils/soundManager';
+import { useGame } from '../../context/GameContext';
 
 interface OrderingTestsProps {
   caseData: CaseData;
@@ -25,6 +26,7 @@ const OrderingTests: React.FC<OrderingTestsProps> = ({
   maxAttempts,
   timeElapsed
 }) => {
+  const { gameState } = useGame();
   const [selectedTests, setSelectedTests] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,6 +47,8 @@ const OrderingTests: React.FC<OrderingTestsProps> = ({
     const categories = Array.from(categorySet).sort();
     return categories;
   }, [filteredTests]);
+
+  // if (!gameState.isInGame || !gameState.currentCase) return null;
 
   const handleTestToggle = (testId: string) => {
     setSelectedTests(prev => {
@@ -78,18 +82,18 @@ const OrderingTests: React.FC<OrderingTestsProps> = ({
 
   // Check if test is from original case data (correct/necessary)
   const isOriginalTest = (testId: string): boolean => {
-    return testsData?.tests?.some(test => test.id === testId) || false;
+    return testsData?.tests?.some((test: any) => test.id === testId) || false;
   };
 
   // Check if test is necessary according to case data
   const isNecessaryTest = (testId: string): boolean => {
-    const originalTest = testsData?.tests?.find(test => test.id === testId);
+    const originalTest = testsData?.tests?.find((test: any) => test.id === testId);
     return originalTest?.necessary || false;
   };
 
   // Check if test is contraindicated according to case data
   const isContraindicatedTest = (testId: string): boolean => {
-    const originalTest = testsData?.tests?.find(test => test.id === testId);
+    const originalTest = testsData?.tests?.find((test: any) => test.id === testId);
     return originalTest?.contraindicated || false;
   };
 
@@ -172,10 +176,7 @@ const OrderingTests: React.FC<OrderingTestsProps> = ({
                         className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                           isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
                         } ${
-                          isContraindicated ? 'border-red-300 bg-red-50' :
-                          isNecessary ? 'border-green-300 bg-green-50' :
-                          isOriginal ? 'border-blue-300 bg-blue-50' :
-                          'border-gray-200'
+                          isSelected ? 'border-blue-300 bg-blue-50' : 'border-gray-200'
                         }`}
                       >
                         <input
@@ -186,14 +187,8 @@ const OrderingTests: React.FC<OrderingTestsProps> = ({
                           className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                         />
                         <div className="flex-1 min-w-0">
-                          <span className={`text-sm font-medium ${
-                            isContraindicated ? 'text-red-900' :
-                            isNecessary ? 'text-green-900' :
-                            'text-gray-900'
-                          }`}>
+                          <span className="text-sm font-medium text-gray-900">
                             {test.name}
-                            {isNecessary && <span className="text-green-600 ml-1">✓</span>}
-                            {isContraindicated && <span className="text-red-600 ml-1">⚠️</span>}
                           </span>
                           {test.description && (
                             <div className="text-xs text-gray-500 mt-1">
@@ -212,20 +207,9 @@ const OrderingTests: React.FC<OrderingTestsProps> = ({
 
         {/* Legend */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-900 mb-2">Legend:</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-green-300 bg-green-50 rounded"></div>
-              <span>✓ Necessary/Recommended</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-blue-300 bg-blue-50 rounded"></div>
-              <span>Case-relevant option</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-red-300 bg-red-50 rounded"></div>
-              <span>⚠️ Contraindicated/Dangerous</span>
-            </div>
+          <h3 className="text-sm font-medium text-gray-900 mb-2">Selection Limit:</h3>
+          <div className="text-xs text-gray-600">
+            You can select up to {maxAllowed} tests. Choose carefully based on the patient's presentation.
           </div>
         </div>
 

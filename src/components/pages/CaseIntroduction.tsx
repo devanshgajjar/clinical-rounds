@@ -75,6 +75,8 @@ const CaseIntroduction: React.FC = () => {
           <button 
             onClick={handleBack}
             className="text-gray-600 hover:text-gray-900 text-2xl"
+            title="Back to Cases"
+            aria-label="Back to Cases"
           >
             ←
           </button>

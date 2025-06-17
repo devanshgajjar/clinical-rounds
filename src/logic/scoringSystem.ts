@@ -1,5 +1,5 @@
 import { StepType } from '../types/game';
-import { CaseData } from '../data/cases';
+import { CaseData } from '../types/game';
 
 export interface StepResult {
   stepType: StepType;
@@ -47,8 +47,10 @@ export class ScoringSystem {
   }
 
   private static getTimePerformance(timeElapsed: number, caseData: CaseData): 'excellent' | 'good' | 'poor' {
-    const { excellent, good, poor } = caseData.scoring.timeThresholds;
-    
+    const thresholds = (caseData.scoring && 'timeThresholds' in caseData.scoring && (caseData.scoring as any).timeThresholds)
+      ? (caseData.scoring as any).timeThresholds
+      : { excellent: 60, good: 120, poor: 180 };
+    const { excellent, good, poor } = thresholds;
     if (timeElapsed <= excellent) return 'excellent';
     if (timeElapsed <= good) return 'good';
     if (timeElapsed <= poor) return 'poor';
@@ -70,24 +72,12 @@ export class ScoringSystem {
           !correctAnswers.includes(id)
         ).length;
         const totalRelevant = correctAnswers.length;
-        const minRequired = caseData.steps[StepType.HISTORY_TAKING].minimumRequired;
-        
-        // Fail if minimum required questions not met
-        if (relevantSelected < minRequired) return 0;
-        
-        // Base score: percentage of relevant questions asked (max 100%)
+        const minRequired = caseData.steps[StepType.HISTORY_TAKING].minimumRequired || 3;
+        if (selectedAnswers.length < minRequired || relevantSelected < 2) return 0;
+        // Proportional scoring
         const relevantScore = (relevantSelected / totalRelevant) * 100;
-        
-        // Strong penalty for irrelevant questions (realistic clinical efficiency)
-        // Each irrelevant question costs 15 points to discourage shotgun approach
-        const irrelevantPenalty = irrelevantSelected * 15;
-        
-        // Additional penalty for excessive selections (selecting ALL options)
-        const totalSelected = selectedAnswers.length;
-        const excessivePenalty = totalSelected > (totalRelevant + 2) ? (totalSelected - (totalRelevant + 2)) * 10 : 0;
-        
-        const historyScore = relevantScore - irrelevantPenalty - excessivePenalty;
-        
+        const irrelevantPenalty = irrelevantSelected * 10;
+        const historyScore = relevantScore - irrelevantPenalty;
         return Math.max(0, Math.min(100, historyScore));
 
       case StepType.ORDERING_TESTS:
@@ -97,55 +87,51 @@ export class ScoringSystem {
         ).length;
         const totalNecessary = correctAnswers.length;
         
-        // Check for contraindicated tests (high-risk clinical decisions)
+        // Check for contraindicated tests
         const contraindicated = selectedAnswers.filter(id => {
           const test = testStepData.tests.find((t: any) => t.id === id);
           return test?.contraindicated;
         }).length;
         
-        // Severe penalty for contraindicated tests (potentially dangerous)
+        // Penalty for contraindicated tests
         if (contraindicated > 0) {
-          // For high-risk cases like syncope, contraindicated tests are critical errors
-          if (caseData.difficulty >= 4) return 0; // Automatic fail
-          return Math.max(0, 30 - (contraindicated * 30)); // Heavy penalty for lower risk cases
+          return Math.max(0, 30 - (contraindicated * 30));
         }
         
-        // Reward essential test selection highly
-        let baseScore = 0;
-        if (necessaryTests === totalNecessary) {
-          baseScore = 100; // Full points for getting all essential tests
-        } else if (necessaryTests >= Math.ceil(totalNecessary * 0.8)) {
-          baseScore = 85; // Good score for getting most essential tests
-        } else if (necessaryTests >= Math.ceil(totalNecessary * 0.6)) {
-          baseScore = 70; // Passing score for getting majority of essential tests
-        } else {
-          baseScore = (necessaryTests / totalNecessary) * 60; // Proportional score up to 60%
-        }
+        // Calculate base score based on percentage of necessary tests selected
+        const testPercentage = (necessaryTests / totalNecessary) * 100;
         
-        // Calculate cost efficiency penalty (simulates real clinical resource management)
-        const selectedTestsData = selectedAnswers.map(id => 
-          testStepData.tests.find((t: any) => t.id === id)
-        ).filter(Boolean);
-        
-        const totalCost = selectedTestsData.reduce((sum: number, test: any) => sum + (test?.cost || 0), 0);
-        const costPenalty = totalCost > 1000 ? Math.min(15, (totalCost - 1000) / 100) : 0;
-        
-        // Strong penalty for excessive unnecessary tests (clinical efficiency and cost)
+        // Calculate unnecessary test penalty
         const unnecessaryTests = selectedAnswers.filter(id => 
           !correctAnswers.includes(id) && !testStepData.tests.find((t: any) => t.id === id)?.contraindicated
         ).length;
-        const testEfficiencyPenalty = unnecessaryTests * 12; // 12 points per unnecessary test
+        const unnecessaryPenalty = unnecessaryTests * 10;
         
-        const finalScore = Math.max(0, baseScore - costPenalty - testEfficiencyPenalty);
-        return Math.round(Math.min(100, finalScore));
+        return Math.max(0, Math.min(100, testPercentage - unnecessaryPenalty));
 
       case StepType.DIAGNOSIS:
         const diagnosisStepData = caseData.steps[StepType.DIAGNOSIS];
         
         if (diagnosisStepData.type === 'multiple-choice') {
-          // For single diagnosis cases, penalize multiple selections
-          if (selectedAnswers.length > 1) return 0; // Fail for selecting multiple when only one should be chosen
-          return selectedAnswers[0] === correctAnswers[0] ? 100 : 0;
+          // For single diagnosis cases, check if base diagnosis matches
+          const selectedDiagnosis = selectedAnswers[0];
+          const correctDiagnosis = correctAnswers[0];
+          
+          // If multiple selections, apply penalty but don't fail completely
+          if (selectedAnswers.length > 1) {
+            return Math.max(0, 50 - ((selectedAnswers.length - 1) * 15));
+          }
+          
+          // Check if base diagnosis matches (ignoring secondary details)
+          const selectedBaseDiagnosis = selectedDiagnosis?.split(' ')[0]?.toLowerCase();
+          const correctBaseDiagnosis = correctDiagnosis?.split(' ')[0]?.toLowerCase();
+          
+          if (selectedDiagnosis === correctDiagnosis) {
+            return 100; // Exact match
+          } else if (selectedBaseDiagnosis === correctBaseDiagnosis) {
+            return 80; // Base diagnosis matches
+          }
+          return 0;
         } else {
           // For multiple diagnosis cases
           const correctDiagnoses = selectedAnswers.filter(id => 
@@ -155,14 +141,11 @@ export class ScoringSystem {
             !correctAnswers.includes(id)
           ).length;
           
-          // Must get ALL correct diagnoses for full points, heavy penalty for wrong ones
-          if (correctDiagnoses === correctAnswers.length && incorrectDiagnoses === 0) {
-            return 100;
-          } else if (correctDiagnoses > 0 && incorrectDiagnoses === 0) {
-            return (correctDiagnoses / correctAnswers.length) * 80; // Max 80% for partial correct
-          } else {
-            return Math.max(0, (correctDiagnoses / correctAnswers.length) * 60 - (incorrectDiagnoses * 40));
-          }
+          // Calculate score based on correct and incorrect selections
+          const diagnosisScore = (correctDiagnoses / correctAnswers.length) * 100;
+          const incorrectPenalty = incorrectDiagnoses * 15;
+          
+          return Math.max(0, diagnosisScore - incorrectPenalty);
         }
 
       case StepType.TREATMENT:
@@ -171,27 +154,28 @@ export class ScoringSystem {
           correctAnswers.includes(id)
         ).length;
         const totalCorrect = correctAnswers.length;
+        
+        // Check for contraindicated treatments
         const contraindicatedTx = selectedAnswers.filter(id => {
           const treatment = treatmentStepData.treatments.find((t: any) => t.id === id);
           return treatment?.contraindicated;
         }).length;
         
-        // Automatic fail for contraindicated treatments (dangerous)
-        if (contraindicatedTx > 0) return 0;
-        
-        // Check for critical treatments (those marked as necessary)
-        const criticalTreatments = treatmentStepData.treatments.filter((t: any) => t.necessary);
-        const criticalSelected = selectedAnswers.filter(id => 
-          criticalTreatments.some((t: any) => t.id === id && t.necessary)
-        ).length;
-        
-        // Fail if critical treatments are missed
-        if (criticalSelected < criticalTreatments.length) {
-          return Math.max(0, (criticalSelected / criticalTreatments.length) * 50); // Max 50% if missing critical treatments
+        // Penalty for contraindicated treatments
+        if (contraindicatedTx > 0) {
+          return Math.max(0, 30 - (contraindicatedTx * 30));
         }
         
-        // Full score based on correct treatments selected
-        return (correctTreatments / totalCorrect) * 100;
+        // Calculate base score based on percentage of correct treatments
+        const treatmentPercentage = (correctTreatments / totalCorrect) * 100;
+        
+        // Calculate unnecessary treatment penalty
+        const unnecessaryTreatments = selectedAnswers.filter(id => 
+          !correctAnswers.includes(id) && !treatmentStepData.treatments.find((t: any) => t.id === id)?.contraindicated
+        ).length;
+        const unnecessaryTreatmentPenalty = unnecessaryTreatments * 10;
+        
+        return Math.max(0, Math.min(100, treatmentPercentage - unnecessaryTreatmentPenalty));
 
       default:
         return 0;
@@ -219,7 +203,7 @@ export class ScoringSystem {
     completedSteps: StepType[],
     caseData: CaseData
   ): number {
-    const optimalOrder = caseData.scoring.optimalOrder;
+    const optimalOrder = caseData.scoring?.optimalOrder ?? [];
     const expectedOptimalPosition = optimalOrder.indexOf(stepType);
     const actualPosition = stepOrder - 1; // Convert to 0-based
     
@@ -253,7 +237,7 @@ export class ScoringSystem {
     const isCorrect = score >= 60; // 60% threshold for basic competency
     
     // Calculate step base XP as quarter of case base XP, scaled by score
-    const stepBaseXP = Math.round((caseData.scoring.baseXP / 4) * (score / 100));
+    const stepBaseXP = Math.round(((caseData.scoring?.baseXP ?? 100) / 4) * (score / 100));
     
     const stepMultiplier = this.getStepOrderMultiplier(stepOrder);
     const optimalOrderMultiplier = this.getOptimalOrderMultiplier(stepType, stepOrder, completedSteps, caseData);
@@ -298,7 +282,7 @@ export class ScoringSystem {
     
     // Check if optimal order was followed
     const actualOrder = [...stepResults].sort((a, b) => a.stepOrder - b.stepOrder).map(r => r.stepType);
-    const followedOptimalOrder = JSON.stringify(actualOrder) === JSON.stringify(caseData.scoring.optimalOrder);
+    const followedOptimalOrder = JSON.stringify(actualOrder) === JSON.stringify(caseData.scoring?.optimalOrder ?? []);
     
     // Calculate bonus XP for optimal order
     const bonusXP = followedOptimalOrder ? Math.round(baseXP * 0.15) : 0;

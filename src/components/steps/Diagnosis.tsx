@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { CaseData } from '../../data/cases';
+import { CaseData } from '../../types/game';
 import { StepType } from '../../types/game';
 import { 
   medicalDiagnoses, 
@@ -7,6 +7,7 @@ import {
   MedicalDiagnosis
 } from '../../data/medicalOptions';
 import { playSound } from '../../utils/soundManager';
+import { useGame } from '../../context/GameContext';
 
 interface DiagnosisProps {
   caseData: CaseData;
@@ -25,6 +26,7 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
   maxAttempts,
   timeElapsed
 }) => {
+  const { gameState } = useGame();
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,6 +47,8 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
     const categories = Array.from(categorySet).sort();
     return categories;
   }, [filteredDiagnoses]);
+
+  // if (!gameState.isInGame || !gameState.currentCase) return null;
 
   const handleDiagnosisToggle = (diagnosisId: string) => {
     if (diagnosisData.type === 'multiple-choice') {
@@ -82,12 +86,12 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
 
   // Check if diagnosis is from original case data (correct)
   const isOriginalDiagnosis = (diagnosisId: string): boolean => {
-    return diagnosisData?.options?.some(option => option.id === diagnosisId) || false;
+    return diagnosisData?.options?.some((option: any) => option.id === diagnosisId) || false;
   };
 
   // Check if diagnosis is correct according to case data
   const isCorrectDiagnosis = (diagnosisId: string): boolean => {
-    const originalOption = diagnosisData?.options?.find(option => option.id === diagnosisId);
+    const originalOption = diagnosisData?.options?.find((option: any) => option.id === diagnosisId);
     return originalOption?.correct || false;
   };
 
@@ -156,9 +160,7 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
                     <label
                       key={diagnosis.id}
                       className={`flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
-                        isCorrect ? 'border-green-300 bg-green-50' :
-                        isOriginal ? 'border-blue-300 bg-blue-50' :
-                        'border-gray-200'
+                        isSelected ? 'border-blue-300 bg-blue-50' : 'border-gray-200'
                       }`}
                     >
                       <input
@@ -169,11 +171,8 @@ const Diagnosis: React.FC<DiagnosisProps> = ({
                         name={diagnosisData.type === 'multiple-choice' ? 'diagnosis' : undefined}
                       />
                       <div className="flex-1 min-w-0">
-                        <span className={`text-lg font-medium ${
-                          isCorrect ? 'text-green-900' : 'text-gray-900'
-                        }`}>
+                        <span className="text-lg font-medium text-gray-900">
                           {diagnosis.name}
-                          {isCorrect && <span className="text-green-600 ml-1">✓</span>}
                         </span>
                         <div className="text-sm text-gray-500 mt-1">
                           {diagnosis.icd10 && `ICD-10: ${diagnosis.icd10}`}
